@@ -1,5 +1,5 @@
 {
-  "ast-grep": {
+  "php": {
     "command": "/opt/homebrew/bin/sg",
     "args": ["lsp", "-c", "~/.ast-grep/sgconfig.yml"],
     "extensionToLanguage": {
