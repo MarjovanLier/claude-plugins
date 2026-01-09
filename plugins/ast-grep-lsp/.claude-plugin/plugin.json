@@ -1,6 +1,6 @@
 {
   "name": "ast-grep-lsp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "ast-grep language server for structural code search and analysis.",
   "author": {
     "name": "Marjo van Lier",
