@@ -1,5 +1,5 @@
 {
-  "php": {
+  "phpactor": {
     "command": "phpactor",
     "args": ["language-server"],
     "extensionToLanguage": {
