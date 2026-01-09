@@ -1,11 +1,11 @@
 {
-  "ast-grep": {
+  "php": {
     "command": "/opt/homebrew/bin/sg",
     "args": ["lsp", "-c", "/Users/marjovanlier/.ast-grep/sgconfig.yml"],
     "extensionToLanguage": {
-      ".php": "ast-grep",
-      ".phtml": "ast-grep",
-      ".inc": "ast-grep"
+      ".php": "php",
+      ".phtml": "php",
+      ".inc": "php"
     },
     "transport": "stdio",
     "initializationOptions": {},
