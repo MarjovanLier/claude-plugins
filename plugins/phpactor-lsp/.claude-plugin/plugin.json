@@ -1,0 +1,9 @@
+{
+  "name": "phpactor-lsp",
+  "version": "1.0.4",
+  "description": "PHP language server: phpactor for refactoring and code actions.",
+  "author": {
+    "name": "Marjo van Lier",
+    "email": "marjo.vanlier@gmail.com"
+  }
+}

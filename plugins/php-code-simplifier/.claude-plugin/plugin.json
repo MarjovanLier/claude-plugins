@@ -1,0 +1,9 @@
+{
+  "name": "php-code-simplifier",
+  "version": "1.0.0",
+  "description": "Agent that simplifies and refines PHP code for clarity, consistency, and maintainability while preserving functionality",
+  "author": {
+    "name": "Marjo Wenzel van Lier",
+    "email": "marjo.vanlier@gmail.com"
+  }
+}

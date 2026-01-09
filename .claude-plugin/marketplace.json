@@ -1,0 +1,56 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "marjo-claude-plugins",
+  "version": "1.0.0",
+  "description": "Claude Code plugins for PHP development with LSP servers and code simplification",
+  "owner": {
+    "name": "Marjo van Lier",
+    "email": "marjo.vanlier@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "ast-grep-lsp",
+      "description": "ast-grep language server for structural code search and analysis",
+      "version": "1.0.3",
+      "author": {
+        "name": "Marjo van Lier",
+        "email": "marjo.vanlier@gmail.com"
+      },
+      "source": "./plugins/ast-grep-lsp",
+      "category": "development"
+    },
+    {
+      "name": "intelephense-lsp",
+      "description": "PHP language server: Intelephense for code intelligence, completion, and diagnostics",
+      "version": "1.0.4",
+      "author": {
+        "name": "Marjo van Lier",
+        "email": "marjo.vanlier@gmail.com"
+      },
+      "source": "./plugins/intelephense-lsp",
+      "category": "development"
+    },
+    {
+      "name": "phpactor-lsp",
+      "description": "PHP language server: phpactor for refactoring and code actions",
+      "version": "1.0.4",
+      "author": {
+        "name": "Marjo van Lier",
+        "email": "marjo.vanlier@gmail.com"
+      },
+      "source": "./plugins/phpactor-lsp",
+      "category": "development"
+    },
+    {
+      "name": "php-code-simplifier",
+      "description": "Agent that simplifies and refines PHP code for clarity, consistency, and maintainability while preserving functionality",
+      "version": "1.0.0",
+      "author": {
+        "name": "Marjo van Lier",
+        "email": "marjo.vanlier@gmail.com"
+      },
+      "source": "./plugins/php-code-simplifier",
+      "category": "development"
+    }
+  ]
+}

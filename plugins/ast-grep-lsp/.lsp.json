@@ -1,0 +1,16 @@
+{
+  "ast-grep": {
+    "command": "/opt/homebrew/bin/sg",
+    "args": ["lsp", "-c", "~/.ast-grep/sgconfig.yml"],
+    "extensionToLanguage": {
+      ".php": "php",
+      ".phtml": "php",
+      ".inc": "php"
+    },
+    "transport": "stdio",
+    "initializationOptions": {},
+    "settings": {},
+    "maxRestarts": 3,
+    "restartOnCrash": true
+  }
+}
