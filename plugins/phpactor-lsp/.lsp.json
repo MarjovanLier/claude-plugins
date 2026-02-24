@@ -12,8 +12,6 @@
     },
     "transport": "stdio",
     "initializationOptions": {},
-    "settings": {},
-    "maxRestarts": 3,
-    "restartOnCrash": true
+    "settings": {}
   }
 }

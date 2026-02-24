@@ -1,9 +1,0 @@
-{
-  "name": "intelephense-lsp",
-  "version": "1.0.4",
-  "description": "PHP language server: Intelephense for code intelligence, completion, and diagnostics.",
-  "author": {
-    "name": "Marjo van Lier",
-    "email": "marjo.vanlier@gmail.com"
-  }
-}

@@ -20,20 +20,9 @@
       "category": "development"
     },
     {
-      "name": "intelephense-lsp",
-      "description": "PHP language server: Intelephense for code intelligence, completion, and diagnostics",
-      "version": "1.0.4",
-      "author": {
-        "name": "Marjo van Lier",
-        "email": "marjo.vanlier@gmail.com"
-      },
-      "source": "./plugins/intelephense-lsp",
-      "category": "development"
-    },
-    {
       "name": "phpactor-lsp",
       "description": "PHP language server: phpactor for refactoring and code actions",
-      "version": "1.0.4",
+      "version": "1.0.6",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"

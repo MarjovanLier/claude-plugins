@@ -1,6 +1,6 @@
 {
   "name": "phpactor-lsp",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "PHP language server: phpactor for refactoring and code actions.",
   "author": {
     "name": "Marjo van Lier",
