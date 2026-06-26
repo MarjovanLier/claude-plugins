@@ -1,19 +1,21 @@
 # phpactor-lsp
 
-Claude Code plugin providing phpactor language server for refactoring and code actions.
+Claude Code plugin providing PHP language support by multiplexing two language servers behind a single LSP: [intelephense](https://intelephense.com/) for completion and diagnostics, and [phpactor](https://phpactor.readthedocs.io/) for refactoring and code actions.
 
 ## Description
 
-[Phpactor](https://phpactor.readthedocs.io/) is a PHP completion, refactoring, and introspection tool. This plugin integrates the phpactor language server with Claude Code.
+Claude Code accepts only one language server per file type. To run intelephense and phpactor together, this plugin points Claude Code at [lspx](https://github.com/thefrontside/lspx), a language server multiplexer that starts both servers, fans each request out to both, and merges their responses.
+
+Intelephense handles completion and diagnostics; phpactor adds refactorings and code actions that intelephense does not provide.
 
 ## Features
 
-- Intelligent code completion
-- Refactoring (extract method, rename, move class, etc.)
-- Code generation (implement interface, override methods)
-- Go to definition / Find references
-- Class generation and transformation
-- Import management
+- Intelligent code completion and diagnostics (intelephense)
+- Refactoring: extract method, rename, move class (phpactor)
+- Code generation: implement interface, override methods (phpactor)
+- Go to definition / find references (both, merged)
+- Class generation and transformation (phpactor)
+- Import management (phpactor)
 
 ## Supported File Extensions
 
@@ -28,27 +30,54 @@ Claude Code plugin providing phpactor language server for refactoring and code a
 
 ## Requirements
 
-- phpactor installed and available in PATH
+All three executables must be on your `PATH`:
 
-### Installation
+- `lspx` (the multiplexer)
+- `intelephense`
+- `phpactor`
+
+### Installing lspx
+
+lspx is a Deno CLI with no published binary, so compile it once. Deno >= 2.0 is needed only for the build; the result is a self-contained binary.
 
 ```bash
-# Via Composer (global)
-composer global require phpactor/phpactor
+# Install Deno if needed: brew install deno
+git clone --depth 1 https://github.com/thefrontside/lspx
+cd lspx
+deno task compile            # produces dist/lspx
+mv dist/lspx ~/.local/bin/   # any directory on your PATH
 
-# Via Homebrew
-brew install phpactor
+lspx --help                  # verify
+```
+
+### Installing the language servers
+
+```bash
+# intelephense
+npm install -g intelephense
+
+# phpactor: standalone phar
+curl -Lo phpactor.phar https://github.com/phpactor/phpactor/releases/latest/download/phpactor.phar
+chmod +x phpactor.phar
+mv phpactor.phar ~/.local/bin/phpactor
+
+# phpactor alternatives
+composer global require phpactor/phpactor   # via Composer
+brew install phpactor                       # via Homebrew
 ```
 
 ## Configuration
 
-The LSP server is configured with:
+`.lsp.json` launches lspx, which starts both servers and merges their responses:
 
 ```json
 {
   "php": {
-    "command": "phpactor",
-    "args": ["language-server"],
+    "command": "lspx",
+    "args": [
+      "--lsp", "intelephense --stdio",
+      "--lsp", "phpactor language-server"
+    ],
     "extensionToLanguage": {
       ".php": "php",
       ".phtml": "php",
@@ -57,11 +86,16 @@ The LSP server is configured with:
       ".php5": "php",
       ".phps": "php"
     },
-    "maxRestarts": 3,
-    "restartOnCrash": true
+    "transport": "stdio",
+    "initializationOptions": {},
+    "settings": {}
   }
 }
 ```
+
+lspx supervises both backends and restarts either if it crashes, so the unsupported `maxRestarts` and `restartOnCrash` fields are not used.
+
+> Note: phpactor refuses to start when the client sends a null root URI, and lspx exits if a backend dies. Claude Code provides a workspace root, so this only bites if you launch the server outside a project.
 
 ## Schema Reference
 

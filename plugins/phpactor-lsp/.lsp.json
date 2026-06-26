@@ -1,14 +1,17 @@
 {
-  "phpactor": {
-    "command": "phpactor",
-    "args": ["language-server"],
+  "php": {
+    "command": "lspx",
+    "args": [
+      "--lsp", "intelephense --stdio",
+      "--lsp", "phpactor language-server"
+    ],
     "extensionToLanguage": {
-      ".php": "phpactor",
-      ".phtml": "phpactor",
-      ".php3": "phpactor",
-      ".php4": "phpactor",
-      ".php5": "phpactor",
-      ".phps": "phpactor"
+      ".php": "php",
+      ".phtml": "php",
+      ".php3": "php",
+      ".php4": "php",
+      ".php5": "php",
+      ".phps": "php"
     },
     "transport": "stdio",
     "initializationOptions": {},
