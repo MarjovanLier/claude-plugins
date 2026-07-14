@@ -11,13 +11,15 @@
     {
       "name": "git-conventions",
       "description": "Git workflow skills: Conventional Commit messages and merge request contribution descriptions",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"
       },
       "source": "./plugins/git-conventions",
-      "skills": ["./skills/"],
+      "skills": [
+        "./skills/"
+      ],
       "category": "development"
     },
     {

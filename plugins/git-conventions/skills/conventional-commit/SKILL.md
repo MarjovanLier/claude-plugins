@@ -22,19 +22,19 @@ All commit descriptions for commits to work branches must use the [Conventional 
 
 Only these types are permitted:
 
-| Type | Emoji | Purpose |
-|------|-------|---------|
-| `feat` | ✨ | New feature |
-| `fix` | 🐛 | Bug fix |
-| `docs` | 📚 | Documentation only changes |
-| `style` | 💎 | Formatting, whitespace, semicolons (no code meaning change) |
-| `refactor` | 📦 | Code change that neither fixes a bug nor adds a feature |
-| `perf` | 🚀 | Code change that improves performance |
-| `test` | 🚨 | Adding missing tests or correcting existing tests |
-| `build` | 🛠 | Build system or external dependency changes |
-| `ci` | ⚙️ | CI configuration files and scripts |
-| `chore` | ♻️ | Other changes that do not modify src or test files |
-| `revert` | 🗑 | Reverts a previous commit |
+| Type | Purpose |
+|------|---------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation only changes |
+| `style` | Formatting, whitespace, semicolons (no code meaning change) |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `perf` | Code change that improves performance |
+| `test` | Adding missing tests or correcting existing tests |
+| `build` | Build system or external dependency changes |
+| `ci` | CI configuration files and scripts |
+| `chore` | Other changes that do not modify src or test files |
+| `revert` | Reverts a previous commit |
 
 **One type per commit.** A commit must contain only one type of change. This is a discipline enforced through code review.
 
