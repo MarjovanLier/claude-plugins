@@ -1,13 +1,27 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "marjo-claude-plugins",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Claude Code plugins: PHP language servers, git workflow skills, and LLM wiki maintenance",
   "owner": {
     "name": "Marjo van Lier",
     "email": "marjo.vanlier@gmail.com"
   },
   "plugins": [
+    {
+      "name": "funzies",
+      "description": "Fun thinking-style skills and an agent: first-principles breakdowns and What Would Elon Do analysis",
+      "version": "1.0.0",
+      "author": {
+        "name": "Marjo van Lier",
+        "email": "marjo.vanlier@gmail.com"
+      },
+      "source": "./plugins/funzies",
+      "skills": [
+        "./skills/"
+      ],
+      "category": "productivity"
+    },
     {
       "name": "wiki-toolkit",
       "description": "Skills for maintaining a Karpathy-style LLM wiki: ingest knowledge, look it up, run checkpoints, and lint the wiki",
