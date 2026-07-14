@@ -6,6 +6,7 @@ A collection of plugins for Claude Code CLI.
 
 | Plugin | Description |
 |--------|-------------|
+| [git-conventions](./plugins/git-conventions) | Git workflow skills: Conventional Commit messages and MR/PR contribution descriptions |
 | [intelephense-lsp](./plugins/intelephense-lsp) | PHP language server for code intelligence, completion, and diagnostics |
 | [php-lspx](./plugins/php-lspx) | PHP language server: intelephense and phpactor multiplexed via lspx |
 | [php-code-simplifier](./plugins/php-code-simplifier) | Agent that simplifies and refines PHP code for clarity and maintainability |

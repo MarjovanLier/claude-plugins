@@ -1,0 +1,9 @@
+{
+  "name": "git-conventions",
+  "version": "1.0.0",
+  "description": "Git workflow skills: Conventional Commit messages and merge request contribution descriptions.",
+  "author": {
+    "name": "Marjo van Lier",
+    "email": "marjo.vanlier@gmail.com"
+  }
+}
