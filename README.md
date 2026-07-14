@@ -6,7 +6,6 @@ A collection of plugins for Claude Code CLI.
 
 | Plugin | Description |
 |--------|-------------|
-| [ast-grep-lsp](./plugins/ast-grep-lsp) | ast-grep language server for structural code search and analysis |
 | [intelephense-lsp](./plugins/intelephense-lsp) | PHP language server for code intelligence, completion, and diagnostics |
 | [php-lspx](./plugins/php-lspx) | PHP language server: intelephense and phpactor multiplexed via lspx |
 | [php-code-simplifier](./plugins/php-code-simplifier) | Agent that simplifies and refines PHP code for clarity and maintainability |

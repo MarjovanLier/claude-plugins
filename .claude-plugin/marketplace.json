@@ -9,17 +9,6 @@
   },
   "plugins": [
     {
-      "name": "ast-grep-lsp",
-      "description": "ast-grep language server for structural code search and analysis",
-      "version": "1.0.6",
-      "author": {
-        "name": "Marjo van Lier",
-        "email": "marjo.vanlier@gmail.com"
-      },
-      "source": "./plugins/ast-grep-lsp",
-      "category": "development"
-    },
-    {
       "name": "php-lspx",
       "description": "PHP language server: intelephense and phpactor multiplexed via lspx for completion, diagnostics, and refactoring",
       "version": "1.1.0",
