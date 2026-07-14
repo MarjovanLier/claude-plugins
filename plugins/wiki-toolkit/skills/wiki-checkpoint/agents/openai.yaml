@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki Checkpoint"
+  short_description: "Run a wiki and memory checkpoint before compaction"
+  default_prompt: "Run the wiki checkpoint workflow for this conversation."

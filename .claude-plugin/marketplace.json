@@ -1,13 +1,27 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "marjo-claude-plugins",
-  "version": "1.1.0",
-  "description": "Claude Code plugins for PHP development with LSP servers and code simplification",
+  "version": "1.2.0",
+  "description": "Claude Code plugins: PHP language servers, git workflow skills, and LLM wiki maintenance",
   "owner": {
     "name": "Marjo van Lier",
     "email": "marjo.vanlier@gmail.com"
   },
   "plugins": [
+    {
+      "name": "wiki-toolkit",
+      "description": "Skills for maintaining a Karpathy-style LLM wiki: ingest knowledge, look it up, run checkpoints, and lint the wiki",
+      "version": "1.0.0",
+      "author": {
+        "name": "Marjo van Lier",
+        "email": "marjo.vanlier@gmail.com"
+      },
+      "source": "./plugins/wiki-toolkit",
+      "skills": [
+        "./skills/"
+      ],
+      "category": "development"
+    },
     {
       "name": "git-conventions",
       "description": "Git workflow skills: Conventional Commit messages and merge request contribution descriptions",
