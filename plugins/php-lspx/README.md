@@ -1,4 +1,4 @@
-# phpactor-lsp
+# php-lspx
 
 Claude Code plugin providing PHP language support by multiplexing two language servers behind a single LSP: [intelephense](https://intelephense.com/) for completion and diagnostics, and [phpactor](https://phpactor.readthedocs.io/) for refactoring and code actions.
 
