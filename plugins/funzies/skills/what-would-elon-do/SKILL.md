@@ -1,6 +1,6 @@
 ---
 name: what-would-elon-do
-description: "What Would Elon Do? Analyse any problem through Elon Musk's decision-making style. First-principles, the 5-step process, insane timelines, physics-first thinking. Use when someone asks 'what would elon do', 'WWED', or wants a bold/contrarian take."
+description: "What Would Elon Do? Analyse any problem through Elon Musk's decision-making style. First-principles, the 5-step process, insane timelines, physics-first thinking. Use proactively when scope is creeping, a solution looks over-engineered, a timeline or estimate seems bloated, a requirement deserves deleting, process is being added instead of removed, or a plan copies what everyone else does. Also use when someone asks 'what would elon do', 'WWED', 'is this worth building', or wants a bold/contrarian take."
 argument-hint: "[situation or question]"
 ---
 

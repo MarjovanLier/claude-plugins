@@ -1,6 +1,6 @@
 ---
 name: first-principles
-description: "Break down any problem using first-principles thinking. Decompose to fundamental truths, discard assumptions, rebuild from scratch. Use when someone is stuck, facing a complex decision, or wants to rethink something from the ground up."
+description: "Break down any problem using first-principles thinking. Decompose to fundamental truths, discard assumptions, rebuild from scratch. Use proactively whenever a decision rests on unexamined assumptions: architecture or design choices with multiple viable approaches, should-we-build-this questions, make-versus-buy calls, cost or effort estimates that feel high, requirements taken on faith, or any justification of the form 'best practice', 'industry standard', or 'we've always done it this way'. Also use when someone is stuck, facing a complex decision, wants trade-offs examined, or wants to rethink something from the ground up."
 argument-hint: "[problem or question]"
 ---
 
