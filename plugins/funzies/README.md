@@ -9,6 +9,7 @@ Claude Code plugin bundling fun thinking-style skills.
 | `first-principles` | Break a problem down to fundamental truths, discard assumptions, and rebuild from scratch |
 | `what-would-elon-do` | Analyse a problem through Elon Musk's decision-making style: the 5-step process, insane timelines, physics-first thinking |
 | `sequential-thinking` | Step-by-step reasoning with calibrated confidence scores, tracked assumptions, and revision/branching of earlier thoughts |
+| `yagni` | Apply You Aren't Gonna Need It to a plan or diff: keep what has a current requirement, cut the speculation |
 
 ## Usage
 
