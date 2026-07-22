@@ -53,7 +53,7 @@ Search for overlap before writing, in this order:
 
 1. The destination's index or equivalent catalogue.
 2. Exact-pattern search for concrete terms (names, IDs, slugs, dates) over the page store.
-3. Semantic search only through the collection matching the destination (`mcp__qmd__query` collection `global-wiki` for `~/wiki/`). No matching collection or tool: text search over the page store is the fallback.
+3. qmd search through the collection matching the destination: check `mcp__qmd__status` for a collection covering the destination wiki (`global-wiki` for `~/wiki/`; project wikis may have their own), then `mcp__qmd__query` with lex and vec sub-queries plus an `intent` to find existing coverage. No matching collection or qmd unavailable: text search over the page store is the fallback.
 
 Search memory with `rg --no-ignore -n -i -- "<term>" "$MEMORY_DIR"` (fallback `grep -rliE`). The `--no-ignore` is mandatory: the memory directory is gitignored, so a plain `rg` silently returns nothing and falsely reads as "no existing rule".
 
