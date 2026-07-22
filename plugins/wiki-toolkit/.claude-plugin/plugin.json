@@ -1,6 +1,6 @@
 {
   "name": "wiki-toolkit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Skills for maintaining a Karpathy-style LLM wiki: ingest knowledge, look it up, run checkpoints, and lint the wiki.",
   "author": {
     "name": "Marjo van Lier",

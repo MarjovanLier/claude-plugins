@@ -49,7 +49,7 @@ If nothing wiki-worthy exists, continue: memory and retrospective checks still a
 
 ### 2. Compare Existing State (WC-09, WC-10)
 
-Search for overlap before writing, in this order:
+Run all three searches before any write; they are a checklist, not a preference cascade. Skipping the qmd search when a collection exists is a spec violation (WC-09), and loading its tools via ToolSearch first, when deferred, is part of the step:
 
 1. The destination's index or equivalent catalogue.
 2. Exact-pattern search for concrete terms (names, IDs, slugs, dates) over the page store.
@@ -74,7 +74,7 @@ Update an existing `feedback_*.md` when one covers the rule; create `feedback_<s
 - Cite every conversation-derived durable claim. A claim meeting all three tests (conversation-only; changes durable factual state; rests on evidence lost after compaction) requires a raw session capture, written before the page that cites it, at a non-colliding path in the destination's source layer (global wiki: `raw/sessions/YYYY-MM-DD-<topic>.md`; a project wiki's own convention otherwise), holding the smallest sufficient extract, with secrets and unrelated personal data redacted. When the destination's conventions provide no permitted location for a capture and forbid creating one, cite `[source: conversation, weak]`, state on the page that the required raw evidence could not be retained, and record the failure in the report. All other durable conversation claims cite `[source: conversation, weak]`. Never plain `[source: conversation]`; never fabricate sources.
 - Staleness applies only to `status: active` pages. Report stale overlapping pages; do not fabricate updates for them.
 - No pages for ephemeral task detail (debugging steps, commands tried, build output).
-- When wiki writes occurred and the destination keeps a log, add a newest-first entry in the destination log's own format, op `ingest` (or `lint` when only wiki-health fixes were made), ending with a one-line retrospective count summary (global wiki heading: `## [YYYY-MM-DD] ingest | checkpoint sweep`). Write it only after all wiki writes, including promotions, are complete. No log entry for memory-only sweeps.
+- When wiki writes occurred and the destination keeps a log, add a newest-first entry in the destination log's own format, op `ingest` (or `lint` when only wiki-health fixes were made), ending with a one-line retrospective count summary (global wiki heading: `## [YYYY-MM-DD] ingest | checkpoint sweep`; when an entry with that exact heading already exists for the same day, append a short topic suffix, e.g. `## [YYYY-MM-DD] ingest | checkpoint sweep, <topic>`, so markdownlint's duplicate-heading check stays clean). Write it only after all wiki writes, including promotions, are complete. No log entry for memory-only sweeps.
 
 ### 5. Write Memory (WC-21 to WC-23, WC-36 to WC-38)
 
