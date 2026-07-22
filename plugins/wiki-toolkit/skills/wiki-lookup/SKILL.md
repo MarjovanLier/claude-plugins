@@ -20,7 +20,7 @@ Project root: the workspace root the harness reports; otherwise the nearest ance
 - Cross-project knowledge, reusable tooling, personal setup, personal facts: `~/wiki/`.
 - Scope genuinely spans both: search both destinations.
 
-Map each selected wiki to a qmd collection by absolute path via `mcp__qmd__status`, never by name-guessing. A destination with no matching collection is searched on the filesystem instead: read its `SCHEMA.md` or sniff the layout first, and do not assume `pages/` or `index.md` exist (project layouts vary, e.g. `concepts/`, `entities/`, `sources/`).
+Map each selected wiki to a qmd collection by absolute path via `mcp__qmd__status`, never by name-guessing. When the qmd tools are deferred in the current harness, load them first in one ToolSearch call (`select:mcp__qmd__status,mcp__qmd__query,mcp__qmd__get,mcp__qmd__multi_get`); qmd being unloaded is not qmd being absent. A destination with no matching collection is searched on the filesystem instead: read its `SCHEMA.md` or sniff the layout first, and do not assume `pages/` or `index.md` exist (project layouts vary, e.g. `concepts/`, `entities/`, `sources/`).
 
 ## Search: map first, bodies last
 
