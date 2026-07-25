@@ -32,7 +32,15 @@ Routing when no project wiki exists: durable project-scoped facts go to the glob
 
 ## Git Safety Before Writing
 
-When the global wiki is the destination and `skip wiki` is absent, run `git -C ~/wiki pull --ff-only` before reading its schema, catalogue, or pages. `--ff-only` is required: a plain `pull` may merge or rebase depending on the user's config, invoking hooks and touching files the checkpoint never intended to change. A failed pull blocks all wiki writes: report findings that would have been written as `not written: global wiki pull failed`; a failed pull with no wiki-route findings is a failure only, never an invented not-written entry.
+When the global wiki is the destination and `skip wiki` is absent, synchronise it before reading its schema, catalogue, or pages. Only attempt this when `~/wiki` is a git repository with a usable upstream; a plain directory or a repository with no remote is a normal setup, not a failure, so proceed with a one-line note in the report instead of blocking.
+
+```bash
+git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only
+```
+
+Both flags are load-bearing and do different jobs. `--ff-only` refuses an unintended merge or rebase commit. `core.hooksPath=/dev/null` is what keeps hooks out: git runs the `post-merge` hook even on a fast-forward pull, and where that hook lints the wiki it dirties the tree mid-sweep, which the status check below would then read as pre-existing local changes and use to block every write. Suppressing hooks here is the only reason the sweep stays deterministic.
+
+A pull that actually ran and failed blocks all wiki writes: report findings that would have been written as `not written: global wiki pull failed`; a failed pull with no wiki-route findings is a failure only, never an invented not-written entry.
 
 When `WIKI_DIR` is inside a git repository, run `git -C "$WIKI_DIR" status` before writing. Never sweep pre-existing uncommitted changes into the checkpoint commit, and never edit a file that already carries uncommitted changes; report the finding routed to it as `not written: blocked by pre-existing local changes` and mention the dirty file in the report. A dirty required companion file (index, log, or capture target) blocks the dependent write as well.
 
@@ -54,7 +62,7 @@ Run all three searches before any write; they are a checklist, not a preference 
 
 1. The destination's index or equivalent catalogue.
 2. Exact-pattern search for concrete terms (names, IDs, slugs, dates) over the page store.
-3. qmd search through the collection matching the destination. Resolve the collection by absolute path via `mcp__qmd__status`, never by guessing its name, then `mcp__qmd__query` with lex and vec sub-queries plus an `intent` to find existing coverage. No matching collection or qmd unavailable: text search over the page store is the fallback.
+3. qmd search through the collection matching the destination. Resolve the collection by absolute path via `mcp__qmd__status`, never by guessing its name, then `mcp__qmd__query` with lex and vec sub-queries plus an `intent` to find existing coverage. No matching collection or qmd unavailable: the fallback is a separate text search using synonyms and paraphrases of the topic. Repeating step 2's exact terms does not satisfy step 3; lexical search misses the paraphrased overlap this step exists to catch, and on any installer without qmd this fallback is the default path rather than an edge case.
 
 Search memory with `rg --no-ignore -n -i -- "<term>" "$MEMORY_DIR"` (fallback `grep -rliE`). The `--no-ignore` is mandatory: the memory directory is gitignored, so a plain `rg` silently returns nothing and falsely reads as "no existing rule".
 
@@ -99,7 +107,7 @@ Lighten memory while sweeping: promote a memory file whose content has proven du
 
 Run the structural lint after wiki writes:
 
-1. The destination wiki's own lint script when present (`<wiki>/scripts/lint_wiki.sh`).
+1. The destination wiki's own lint script when present, at `<wiki>/scripts/lint_wiki.sh` or, when the wiki sits inside a larger repository, at that repository's root.
 2. A project wiki without its own lint script: report `Lint: not run (no project lint script)` rather than imposing global-wiki checks on a different layout.
 3. No lint script available for the destination at all: report `Lint: not run (no compatible lint runner)`. This plugin does not bundle one. Never report a clean lint that did not execute.
 
@@ -107,7 +115,9 @@ Fix errors the sweep introduced; report pre-existing warnings without fixing unr
 
 ### 7. Commit and Push
 
-Global wiki: after lint passes, make one batched commit path-limited to the files the checkpoint changed (conventional format, signed-off), then push. A failed push is reported with the local commit hash.
+Global wiki: whenever the checkpoint made writes, make one batched commit path-limited to the files it changed (conventional format, signed-off), then push. A failed push is reported with the local commit hash.
+
+Lint does not gate the commit. Only a lint error the sweep itself introduced blocks it, and then the fix is to correct that error and commit. A lint that could not run (no compatible runner) must never leave the writes uncommitted: doing so strands them in the working tree, where the dirty-tree guard above then blocks every later checkpoint against the same wiki.
 
 Project wikis: follow the project's conventions; a path-limited commit of only the wiki files the checkpoint changed when the wiki is a git repository; no push mandate.
 
@@ -126,6 +136,7 @@ Wiki checkpoint complete.
 - Retrospective: N findings (A written to memory, B written to wiki, C not written) / none / skipped by argument
 - Findings not written: N (finding summary, source step, intended route or file, exactly one reason each)
 - Lint: clean / N issues (list) / not run (reason)
+- Commit: <hash> pushed / <hash> (push failed) / not run (reason) / not a git repository
 - Failures/skipped steps: none / list (what happened, what remains manual)
 ```
 

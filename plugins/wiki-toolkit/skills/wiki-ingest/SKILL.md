@@ -21,7 +21,7 @@ Same cascade as the checkpoint: `<project root>/wiki/` when it exists, otherwise
 
 ## Git safety
 
-- Global destination: run `git -C ~/wiki pull --ff-only` before reading its schema or pages. `--ff-only` is required: a plain `pull` may merge or rebase depending on the user's config, invoking hooks and touching files this ingest never intended to change. A failed or non-fast-forward pull blocks all writes; report `not written: global wiki pull failed`.
+- Global destination: synchronise before reading its schema or pages, with `git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only`. `--ff-only` refuses an unintended merge or rebase commit; `core.hooksPath=/dev/null` keeps hooks out, because git runs the `post-merge` hook even on a fast-forward pull and a wiki-linting hook would dirty the tree mid-transaction. Attempt this only when `~/wiki` is a git repository with a usable upstream: a plain directory or a remote-less repository is a normal setup, so note it and continue rather than blocking. A pull that ran and failed blocks all writes; report `not written: global wiki pull failed`.
 - Any git-repo destination: before the first write, determine every file the ingest will touch (raw capture, pages, index, log) and run `git status`. If any of them already carries uncommitted changes, the whole transaction is blocked before the first write: report `not written: blocked by pre-existing local changes` and name the dirty files. Never sweep pre-existing uncommitted changes into the ingest commit.
 
 ## Workflow
@@ -69,7 +69,7 @@ Order: raw capture (before any page that cites it), then pages, then index, then
 
 ### 5. Lint
 
-Only after the ingest made wiki writes: the destination's own lint script when present (`<wiki>/scripts/lint_wiki.sh`, which also refreshes the qmd index). Fix errors the ingest introduced; report pre-existing warnings without fixing unrelated content. A project wiki without a lint script: report `Lint: not run (no project lint script)`. No lint script available for the destination at all: report `Lint: not run (no compatible lint runner)`; this plugin does not bundle one, and a lint that did not execute is never reported as clean. A blocked, paused, or no-write outcome reports `Lint: not run (<reason>)`.
+Only after the ingest made wiki writes: the destination's own lint script when present, at `<wiki>/scripts/lint_wiki.sh` or, when the wiki sits inside a larger repository, at that repository's root. The global wiki's script also refreshes the qmd index; do not assume another wiki's script does. Fix errors the ingest introduced; report pre-existing warnings without fixing unrelated content. A project wiki without a lint script: report `Lint: not run (no project lint script)`. No lint script available for the destination at all: report `Lint: not run (no compatible lint runner)`; this plugin does not bundle one, and a lint that did not execute is never reported as clean. A blocked, paused, or no-write outcome reports `Lint: not run (<reason>)`.
 
 ### 6. Commit and push
 

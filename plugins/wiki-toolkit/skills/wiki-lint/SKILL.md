@@ -5,7 +5,7 @@ description: >-
   the user asks to "lint the wiki", "wiki lint", "check wiki health", "index the
   wiki pages", "refresh the wiki search index", or anything about validating wiki
   structure or making wiki pages searchable. The wiki is sometimes a project-local
-  folder and there is always a global one at ~/wiki. This skill detects which wiki
+  folder and there is sometimes a global one at ~/wiki. This skill detects which wiki
   applies, runs the correct lint script (which also refreshes the qmd search index
   in one pass), and resolves flagged issues. Do NOT use it for ordinary source-code
   linting (eslint, phpstan, markdownlint of non-wiki files) or for the full
@@ -40,12 +40,19 @@ to satisfy the request.
 
 The lint logic lives in a shell script. Resolve it in this order:
 
-1. **The wiki's own script**: if `$WIKI_DIR` (or its repo root) has `scripts/lint_wiki.sh`,
-   run that. It encodes that wiki's house rules.
+1. **The wiki's own script**: resolve these two paths in order and run the first that is
+   executable. It encodes that wiki's house rules.
 
    ```bash
    "$WIKI_DIR/scripts/lint_wiki.sh" "$WIKI_DIR"
+   # or, when the wiki sits inside a larger repository:
+   "$(git -C "$WIKI_DIR" rev-parse --show-toplevel)/scripts/lint_wiki.sh" "$WIKI_DIR"
    ```
+
+   Report the checks a foreign script actually performs, not the ones listed below. Those
+   describe the global script specifically. Another wiki's script may use different exit
+   codes and may not index at all, in which case the Index line reports
+   `not applicable (script does not index)` rather than an invented count.
 
 2. **A project wiki with no script of its own**: report
    `Lint: not run (no project lint script)` and stop. Do NOT fall back to the global
