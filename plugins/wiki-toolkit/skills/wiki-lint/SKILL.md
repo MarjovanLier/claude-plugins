@@ -10,7 +10,7 @@ description: >-
   in one pass), and resolves flagged issues. Do NOT use it for ordinary source-code
   linting (eslint, phpstan, markdownlint of non-wiki files) or for the full
   pre-compaction knowledge sweep (that is /wiki-checkpoint).
-version: 1.0.0
+version: 1.0.1
 ---
 
 # Wiki Lint

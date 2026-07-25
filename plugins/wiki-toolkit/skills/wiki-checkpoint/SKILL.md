@@ -1,7 +1,7 @@
 ---
 name: wiki-checkpoint
 description: Run a wiki and memory checkpoint at the end of a chat thread or before context compaction. Use when the user invokes wiki-checkpoint, asks to save session knowledge, asks for a wiki or memory sweep, or wants durable findings, retrospective lessons, and routing decisions captured from the current conversation. Honour focus text and skip flags such as skip wiki, skip memory, and skip retrospective.
-version: 1.0.0
+version: 1.0.1
 ---
 
 # Wiki Checkpoint
