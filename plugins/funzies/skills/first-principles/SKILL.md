@@ -1,6 +1,6 @@
 ---
 name: first-principles
-description: "Break down any problem using first-principles thinking. Decompose to fundamental truths, discard assumptions, rebuild from scratch. Use proactively whenever a decision rests on unexamined assumptions: architecture or design choices with multiple viable approaches, should-we-build-this questions, make-versus-buy calls, cost or effort estimates that feel high, requirements taken on faith, or any justification of the form 'best practice', 'industry standard', or 'we've always done it this way'. Also use when someone is stuck, facing a complex decision, wants trade-offs examined, or wants to rethink something from the ground up."
+description: "Neutral first-principles decomposition: separate the assumptions behind a decision from the constraints that actually bind, then rebuild. Use when someone says 'challenge the assumptions', 'reason from first principles', 'rethink this from the ground up', asks which constraints are genuinely fundamental, or justifies a consequential choice with 'best practice', 'industry standard', or 'we've always done it this way'. Also for make-versus-buy calls and estimates that rest on unexamined premises. Not for trimming speculative feature scope alone (use yagni), a deliberately bold or persona-styled take (use what-would-elon-do), or routine implementation decisions."
 argument-hint: "[problem or question]"
 ---
 

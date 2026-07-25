@@ -1,6 +1,6 @@
 ---
 name: yagni
-description: "Apply YAGNI (You Aren't Gonna Need It) to a feature, plan, design, or diff: separate what is needed now from speculation and cut the rest. Use proactively when a plan includes functionality for hypothetical future requirements, configurability nobody asked for, abstractions with one implementation, or 'while we're at it' additions. Also use when someone says 'yagni', 'do we really need this', 'is this premature', or asks to trim scope."
+description: "Apply YAGNI (You Aren't Gonna Need It) to a feature, plan, design, or diff: classify each element as needed now or speculative, and cut the speculation. Use when someone says 'yagni', 'do we really need this', 'is this premature', asks to trim speculative scope, or when a plan adds functionality for hypothetical future requirements, configurability nobody asked for, abstractions with one implementation, or 'while we're at it' extras. Not for required security, accessibility, trust-boundary validation, or data-loss prevention; not for neutral assumption analysis (use first-principles); not for a persona-styled take (use what-would-elon-do)."
 argument-hint: "[feature, plan, or code to challenge]"
 ---
 

@@ -10,8 +10,8 @@
   "plugins": [
     {
       "name": "funzies",
-      "description": "Fun thinking-style skills and an agent: first-principles breakdowns and What Would Elon Do analysis",
-      "version": "1.3.1",
+      "description": "Thinking-style skills and an agent: first-principles analysis, YAGNI scope review, sequential decision analysis, and a What Would Elon Do lens",
+      "version": "1.4.0",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"
