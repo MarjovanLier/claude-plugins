@@ -37,27 +37,7 @@ Follow the steps below in order. Do not skip a step. Do not reorder steps. Each 
 
 1. `FEATURE_BRANCH` = the output of `git branch --show-current`
 2. `BASE_BRANCH` = `main` if `git show-ref --verify --quiet refs/heads/main` succeeds; otherwise `develop` if `git show-ref --verify --quiet refs/heads/develop` succeeds; otherwise inference fails
-3. IF `FEATURE_BRANCH` is empty (detached HEAD), or `FEATURE_BRANCH` equals `BASE_BRANCH`, or inference failed: display the message below (run `git branch -a --format="%(refname:short)"` and insert up to the first 10 branch names), then STOP. Do not run any further git commands. Do not generate a description.
-
-```
-Please provide branch arguments.
-
-Usage: /contribution-description [base-branch] [feature-branch]
-
-Examples:
-  /contribution-description main
-  /contribution-description develop feature/AUTH-123
-  /contribution-description main feature/user-auth
-
-Available branches:
-[insert the branch names here]
-
-Instructions:
-1. Base branch: The branch you want to merge into (typically 'main' or 'develop')
-2. Feature branch: The branch containing your changes (defaults to current branch if not specified)
-
-Please re-run the command with the appropriate branch arguments.
-```
+3. IF `FEATURE_BRANCH` is empty (detached HEAD), or `FEATURE_BRANCH` equals `BASE_BRANCH`, or inference failed: ask for the branches and STOP. Say that the base and feature branch could not be inferred, show the usage `/contribution-description [base-branch] [feature-branch]`, and list up to ten names from `git branch -a --format="%(refname:short)"`. Run no further git commands and generate no description.
 
 Before continuing, state which branches are being compared: `Comparing: FEATURE_BRANCH -> BASE_BRANCH`.
 
@@ -114,14 +94,22 @@ Never read the full diff of a large branch; the Summary does not need it.
 
 ### Step 5: Detect the JIRA ticket ID
 
-A JIRA ticket ID matches the pattern `[A-Z]+-[0-9]+`, for example `AUTH-123`.
+A JIRA key is an uppercase project key, a hyphen, and a number, for example `AUTH-123`. A project key may itself contain digits or underscores (`TEAM2-17`, `OPS_CORE-9`), so the key part is `[A-Z][A-Z0-9_]+`.
 
-Check these sources in order; the FIRST match wins:
+**Collect every candidate, do not take the first match.** A naive `[A-Z]+-[0-9]+ | head -1` silently turns common identifiers into fake ticket IDs: `fix/UTF-8-encoding` yields `UTF-8`, `feat/PHP-8.3-upgrade` yields `PHP-8`, `chore/SHA-256-migration` yields `SHA-256`, and `docs: Explain RFC-9110` yields `RFC-9110`. Each of those would then be put in the title and looked up as a ticket.
 
-1. The feature branch name: `echo "$FEATURE_BRANCH" | grep -oE '[A-Z]+-[0-9]+' | head -1`
-2. The commit titles: `git log $BASE_BRANCH..$FEATURE_BRANCH --format="%s" | grep -oE '[A-Z]+-[0-9]+' | head -1`
+```bash
+{ printf '%s\n' "<feature-branch>"; git log <base-ref>..<feature-ref> --format='%s'; } \
+  | grep -oE '\b[A-Z][A-Z0-9_]+-[0-9]+\b' | sort -u
+```
 
-IF no ticket ID is found in either source: skip Step 6, use the title format `(<type>) <description>` without a ticket ID, and mention in your chat response (not in the description document) that no ticket was detected.
+Discard candidates whose key is a well-known non-JIRA prefix: `UTF`, `ISO`, `RFC`, `CVE`, `SHA`, `MD`, `PHP`, `ES`, `HTTP`, `IPV`, `AES`, `RSA`, `UTC`. Then:
+
+- **Exactly one candidate remains:** use it.
+- **Several remain:** prefer one that appears in the branch name; if that does not disambiguate, ask the user which ticket the contribution belongs to. Do not guess.
+- **None remain:** skip Step 6, use the title format `(<type>) <description>` without a ticket ID, and mention in your chat response (not in the description document) that no ticket was detected.
+
+Where Step 6's Jira lookup is available, treat a failed lookup as evidence the candidate was a false positive: drop it and re-apply the rules above rather than putting an unverified key in the title.
 
 ### Step 6: Look up the JIRA ticket via the Atlassian MCP
 
@@ -136,16 +124,25 @@ IF the MCP server is unavailable or the ticket is not found: continue with commi
 
 Pick exactly ONE type from: Added | Changed | Deprecated | Removed | Fixed | Security.
 
-First, count the Conventional Commit type prefixes recorded in Step 3. `feat` commits signal added functionality; `fix` and `revert` commits signal corrections; all other types (`refactor`, `perf`, `style`, `docs`, `test`, `build`, `ci`, `chore`) signal changes to existing code. The dominant signal is the one with the most commits.
+Content-based rules run FIRST, because a single removal or security fix matters more to a reader than the commit count around it. Apply in order; the first match wins:
 
-Then apply these rules in order; the first rule that matches wins:
+1. **`Security`**: any commit fixes a security vulnerability. Judge from titles and bodies, and from a `security` type prefix where the repository permits one.
+2. **`Removed`**: the branch removes functionality. Look for breaking commits marked `!` that delete features, and for removal described in commit bodies. A branch of two `fix` commits plus one `feat!: Remove legacy endpoint` is `Removed`, not `Fixed`.
+3. **`Deprecated`**: the branch marks functionality as deprecated.
 
-1. Any commit fixes a security vulnerability (judge from titles and bodies; the commit standard has no `security` type, so these arrive as `fix` commits): use `Security`
-2. The dominant signal is `fix` or `revert`: use `Fixed`
-3. The changes remove functionality (breaking commits marked `!` that delete features, or removal described in commit bodies): use `Removed`
-4. The changes mark functionality as deprecated: use `Deprecated`
-5. The dominant signal is `feat`: use `Added`
-6. Anything else (refactors, dependency updates, mixed work with no dominant signal): use `Changed`
+Only if none of the above matched, fall back to type dominance. Count the Conventional Commit prefixes recorded in Step 3 and group them:
+
+| Signal | Prefixes |
+|---|---|
+| Added | `feat` |
+| Fixed | `fix`, `revert` |
+| Changed | `refactor`, `perf`, `style`, `docs`, `test`, `build`, `ci`, `chore`, `deps`, `config`, `release` |
+
+4. The dominant group is Added: use `Added`
+5. The dominant group is Fixed: use `Fixed`
+6. Anything else, including a tie: use `Changed`
+
+A `revert` that undoes an added feature is a removal, so rule 2 catches it before the Fixed grouping applies.
 
 ### Step 8: Compose the title
 
@@ -181,15 +178,3 @@ Output exactly this document and nothing else inside it (no extra sections, no s
 <the paragraph from Step 9>
 ```
 
-## Final checklist
-
-Before responding, verify every item:
-
-- [ ] Branches were determined (from arguments or inferred defaults) and stated before any analysis ran
-- [ ] Every commit title and body between the branches was read
-- [ ] The JIRA ticket was looked up via the Atlassian MCP (or its absence was reported in chat)
-- [ ] The title type is one of: Added, Changed, Deprecated, Removed, Fixed, Security
-- [ ] The title description is under 50 characters, capitalised, with no trailing full stop
-- [ ] The Summary is one prose paragraph of 3 to 5 sentences with no bullets
-- [ ] The Summary ends with user-visible impact or an explicit statement of no behavioural change
-- [ ] The document contains only the title and the Summary section
