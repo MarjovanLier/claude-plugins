@@ -46,12 +46,16 @@ Before continuing, state which branches are being compared: `Comparing: FEATURE_
 
 Run:
 
+Substitute the two names from Step 1 as literal quoted values:
+
 ```bash
-git show-ref --verify --quiet refs/heads/$BASE_BRANCH || echo "Warning: Base branch $BASE_BRANCH not found locally"
-git show-ref --verify --quiet refs/heads/$FEATURE_BRANCH || echo "Warning: Feature branch $FEATURE_BRANCH not found locally"
+git rev-parse --verify -q 'main^{commit}'                    >/dev/null || echo "Base ref not found"
+git rev-parse --verify -q 'feature/AUTH-123-login^{commit}'  >/dev/null || echo "Feature ref not found"
 ```
 
-IF either warning prints, tell the user which branch was not found and STOP.
+Use `rev-parse`, not `show-ref --verify refs/heads/...`. The latter accepts only local branches, so it rejects a perfectly valid base such as `origin/main`, a tag, or a SHA, all of which the `git log` and `git diff` in Steps 3 and 4 handle without complaint.
+
+IF either message prints, tell the user which ref was not found and STOP.
 
 ### Step 3: Read every commit title and body
 
@@ -99,12 +103,23 @@ A JIRA key is an uppercase project key, a hyphen, and a number, for example `AUT
 
 **Collect every candidate, do not take the first match.** A naive `[A-Z]+-[0-9]+ | head -1` silently turns common identifiers into fake ticket IDs: `fix/UTF-8-encoding` yields `UTF-8`, `feat/PHP-8.3-upgrade` yields `PHP-8`, `chore/SHA-256-migration` yields `SHA-256`, and `docs: Explain RFC-9110` yields `RFC-9110`. Each of those would then be put in the title and looked up as a ticket.
 
+Scan the branch name AND every commit subject and body. Step 3 already established that bodies carry ticket references, so scanning subjects alone throws away the most likely source.
+
+Substitute the two refs from Step 1 as literal quoted values and run this as ONE shell block. Do not write `<base-ref>` or `$BASE_BRANCH` into the command: angle brackets are shell redirection syntax and fail with `no such file or directory`, and the branch names from Step 1 are model state, not shell variables that survive between tool calls.
+
 ```bash
-{ printf '%s\n' "<feature-branch>"; git log <base-ref>..<feature-ref> --format='%s'; } \
-  | grep -oE '\b[A-Z][A-Z0-9_]+-[0-9]+\b' | sort -u
+base='main'; feature='feature/AUTH-123-login'   # replace both with the refs from Step 1
+git log "$base..$feature" --format='%s%n%b' > /tmp/.cd-log || echo "GIT LOG FAILED"
+{ printf '%s\n' "$feature"; cat /tmp/.cd-log; } \
+  | grep -oiE '\b[A-Z][A-Z0-9_]+-[0-9]+\b' | tr '[:lower:]' '[:upper:]' | sort -u
+rm -f /tmp/.cd-log
 ```
 
-Discard candidates whose key is a well-known non-JIRA prefix: `UTF`, `ISO`, `RFC`, `CVE`, `SHA`, `MD`, `PHP`, `ES`, `HTTP`, `IPV`, `AES`, `RSA`, `UTC`. Then:
+If `GIT LOG FAILED` prints, the refs are wrong: fix them and re-run. Never read a failed command as "no ticket found"; the pipeline exits 0 either way because it ends in `sort`.
+
+Matching is case-insensitive and then upper-cased, because branch names are commonly lowercased (`feature/auth-123` is the same ticket as `AUTH-123`).
+
+Discard candidates whose key is a well-known non-JIRA prefix: `UTF`, `ISO`, `RFC`, `CVE`, `SHA`, `MD`, `PHP`, `ES`, `HTTP`, `IPV`, `AES`, `RSA`, `UTC`, `TLS`, `ECMA`, `SQL`, `ARM`, `GH`, `US`. This list is a heuristic, not a test: every one of those strings is also a syntactically valid Jira project key. Where Step 6's lookup is available it overrules the list in both directions, so a real `PHP-421` ticket that verifies is kept. Then:
 
 - **Exactly one candidate remains:** use it.
 - **Several remain:** prefer one that appears in the branch name; if that does not disambiguate, ask the user which ticket the contribution belongs to. Do not guess.

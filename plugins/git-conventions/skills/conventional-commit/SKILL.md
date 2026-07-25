@@ -107,7 +107,7 @@ When `/conventional-commit validate` is invoked:
 6. Report one line per commit: ✅ when compliant, ❌ with the specific violation named.
 
 When `/conventional-commit convert` is invoked:
-1. IF the provided arguments name a branch, run `git log <base>..<branch> --format="%h %s"` (base is `main`, or `develop` when `main` does not exist). Otherwise run `git log --format="%h %s" -20`.
+1. IF the provided arguments name a branch, run `git log 'main..the-branch' --format="%h %s"`, substituting the real refs as a single quoted argument. Do not write bare angle-bracket placeholders into the command: the shell reads `<base>` as a redirection and fails with `no such file or directory`. Resolve the base as the explicit argument, else the remote default from `git symbolic-ref refs/remotes/origin/HEAD`, else `main`, else `develop`; ask if none resolves. Otherwise run `git log --format="%h %s" -20`.
 2. For each non-compliant message, output the original message and a corrected conventional message directly below it.
 3. Suggest only; never rewrite history in this mode. Amending is the fix mode's job and applies only to the most recent commit.
 
@@ -117,7 +117,22 @@ When `/conventional-commit fix` is invoked, or a commit linter has rejected a me
 
 A `commit-msg` hook rejects *before* the commit object is written. The commit was never created, `HEAD` still points at the previous, unrelated commit, and the changes are still staged. Amending in that state rewrites the wrong commit and folds the staged work into it.
 
-Run `git status --porcelain` and `git log -1 --format='%h %s'`, then take exactly one branch:
+The deciding evidence is WHERE the rejection came from, not the state of the tree. A local `commit-msg` or `pre-commit` hook rejects a commit that was never created (Branch A). A CI commitlint run, a review comment, or the user pointing at a commit all concern a commit that exists (Branch B). Establish that first:
+
+```bash
+git rev-parse --verify -q HEAD || echo "UNBORN: no commit exists yet"
+git status --porcelain
+git log -1 --format='%h %s' 2>/dev/null
+```
+
+Then classify:
+
+- `UNBORN` printed: there is no commit to amend under any circumstances. Branch A, always.
+- The rejection came from a local hook during a commit you just attempted: Branch A.
+- The rejection names an existing commit (CI output, a SHA, "the last commit"): Branch B.
+- **You cannot tell:** ASK. Do not guess. Staged files do not settle it, because a developer routinely has unrelated work staged while wanting the previous commit's message fixed, and that state satisfies both branches. Guessing wrong in this direction is the destructive one: it rewrites a good commit and folds unrelated work into it.
+
+One caveat for Branch A: if the rejected attempt used `git commit -a` or a pathspec, the changes may not be in the index at all, so a bare `git commit` would commit nothing. Re-stage exactly what the original attempt covered, or re-run it with the same flags and the corrected message.
 
 **Branch A: the commit was rejected and never created** (a `commit-msg` or `pre-commit` hook failed, and `HEAD` is an older commit unrelated to the staged work). This is the common case.
 1. Collect the linter output from the arguments or the conversation.
@@ -128,7 +143,7 @@ Run `git status --porcelain` and `git log -1 --format='%h %s'`, then take exactl
 **Branch B: a commit exists and its message is wrong** (CI commitlint flagged an existing commit, or the user names the `HEAD` commit explicitly).
 1. Confirm with the user which commit is being corrected before touching it. Do not infer it from a hook failure.
 2. Read the current message with `git log -1 --format=%B` and rewrite it as in Branch A step 2.
-3. Publication check before amending: run `git fetch --all --quiet` (skip if offline, and say so), then `git branch -r --contains HEAD` and `git tag --contains HEAD`. If the commit is reachable from any remote ref or tag, or the fetch failed, or the branch has no upstream, STOP: report that amending would require a force-push and show the corrected message instead. A blank result after a failed fetch proves nothing.
+3. Publication check before amending: run `git fetch --all --quiet` (skip if offline, and say so), then `git branch -r --contains HEAD` and `git tag --contains HEAD`. If the commit is reachable from any remote ref or tag, STOP: report that amending would require a force-push and show the corrected message instead. If the fetch failed, STOP as well, because a blank result after a failed fetch proves nothing. A branch with no upstream is NOT a reason to stop: never having been pushed is precisely what makes amending safe.
 4. Amend the message only: `git commit --amend --only -F -` with the corrected message on standard input. `--only` keeps the current index out of the commit, so unrelated staged work is not swept in. Piping via standard input avoids both shell quoting problems and a shared temporary file.
 5. Verify with `git show --stat HEAD` that the message changed and the file list did not.
 
