@@ -6,7 +6,7 @@ version: 1.0.0
 
 # Sequential Thinking with First Principles
 
-A problem-solving skill that integrates first principles thinking with confidence-calibrated sequential reasoning. Combines Elon Musk's problem decomposition methodology with Yang et al. (2024) confidence scoring research to systematically break down complex problems while tracking assumptions, fundamental truths, and uncertainty.
+A problem-solving skill that integrates first principles thinking with confidence-scored sequential reasoning. Combines Elon Musk's problem decomposition methodology with Yang et al. (2024) confidence scoring research to systematically break down complex problems while tracking assumptions, fundamental truths, and uncertainty.
 
 ## Research Foundation
 
@@ -33,7 +33,6 @@ Particularly valuable for:
 - **High-stakes decision making**: Where understanding certainty levels is critical
 - **Complex problem solving**: When multiple valid approaches exist
 - **Collaborative reasoning**: When confidence alignment improves team performance
-- **Learning and calibration**: When improving judgement accuracy over time
 - **Risk assessment**: When uncertainty quantification affects outcomes
 - **Research and analysis**: When evidence quality varies significantly
 
@@ -203,7 +202,7 @@ The cookie persistence issue stems from Panther and Guzzle using separate cookie
   - "Panther uses standard curl cookie format" - UNVERIFIED
 - **Fundamental Truths**:
   - Browsers and HTTP clients maintain separate cookie stores by default
-  - Cookie synchronization requires explicit bridging code
+  - Cookie synchronisation requires explicit bridging code
   - File-based cookie storage needs consistent format
 - **Evidence Base**:
   - Source code: Panther uses BrowserKit, Guzzle uses FileCookieJar
@@ -211,7 +210,7 @@ The cookie persistence issue stems from Panther and Guzzle using separate cookie
 - **Reasoning from Zero**: Yes - traced actual data flow through both systems
 
 ### ➡️ Next Step
-Needed - will design cookie synchronization service to bridge the two systems
+Needed - will design cookie synchronisation service to bridge the two systems
 ```
 
 
@@ -228,25 +227,24 @@ Needed - will design cookie synchronization service to bridge the two systems
 
 5. **Be Honest About Confidence**: Low confidence is valuable information, not a failure
 6. **Explain Every Score**: Provide specific reasoning for confidence levels
-7. **Track Calibration**: Monitor accuracy patterns over time
-8. **Update Dynamically**: Revise confidence as new evidence emerges
-9. **Identify Uncertainty Sources**: Be specific about what introduces doubt
+7. **Update Dynamically**: Revise confidence as new evidence emerges
+8. **Identify Uncertainty Sources**: Be specific about what introduces doubt
 
 ### First Principles Thinking
 
-10. **Challenge Everything**: Especially "everyone does it this way" assumptions
-11. **Find Fundamental Truths**: Break down to irreducible facts
-12. **Avoid Analogies**: Build from first principles, not by copying
-13. **Document Evidence**: Base conclusions on verifiable facts
-14. **Reason from Zero**: Start from fundamentals, not industry standards
+9. **Challenge Everything**: Especially "everyone does it this way" assumptions
+10. **Find Fundamental Truths**: Break down to irreducible facts
+11. **Avoid Analogies**: Build from first principles, not by copying
+12. **Document Evidence**: Base conclusions on verifiable facts
+13. **Reason from Zero**: Start from fundamentals, not industry standards
 
 ### Revision and Branching
 
-15. **Revise Freely**: Better to revise than continue down wrong path
-16. **Branch When Uncertain**: Explore alternatives rather than committing prematurely
-17. **Mark Revisions Clearly**: Use 🔄 prefix and indicate which thought is being reconsidered
-18. **Track Branches**: Use 🌿 prefix and assign branch IDs for alternative reasoning paths
-19. **Extend Thoughts**: Adjust total_thoughts when problem proves more complex
+14. **Revise Freely**: Better to revise than continue down wrong path
+15. **Branch When Uncertain**: Explore alternatives rather than committing prematurely
+16. **Mark Revisions Clearly**: Use 🔄 prefix and indicate which thought is being reconsidered
+17. **Track Branches**: Use 🌿 prefix and assign branch IDs for alternative reasoning paths
+18. **Extend Thoughts**: Adjust the stated {Total} when the problem proves more complex
 
 ## When to Revise or Branch
 
@@ -320,7 +318,6 @@ Needed - will benchmark filesystem vs Redis for actual usage patterns
 - ❌ **Skipping confidence assessment**: Always provide explicit scores with reasoning
 - ❌ **Artificial confidence**: Being honest about uncertainty is more valuable than appearing certain
 - ❌ **Missing uncertainty factors**: Identify specific sources of doubt, don't just give a score
-- ❌ **Ignoring calibration**: Track accuracy patterns to improve over time
 - ❌ **Static confidence**: Update as new evidence emerges
 
 ### First Principles Anti-Patterns
@@ -333,7 +330,7 @@ Needed - will benchmark filesystem vs Redis for actual usage patterns
 ### Process Anti-Patterns
 - ❌ **Forgetting to revise**: Better to backtrack than continue down wrong path
 - ❌ **Linear thinking**: Some problems need branching and exploration
-- ❌ **Fixed thought counts**: Extend total_thoughts when problem proves complex
+- ❌ **Fixed thought counts**: Raise the stated {Total} when the problem proves complex
 - ❌ **Context loss**: Reference and build on previous thoughts
 - ❌ **Irrelevant detail**: Filter out information that doesn't serve the analysis
 

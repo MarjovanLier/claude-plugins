@@ -116,7 +116,7 @@ strings ~/.local/share/claude/versions/2.0.55/claude | grep -A 50 'extensionToLa
 | `extensionToLanguage` | Yes | Map of file extensions to language IDs (min 1) |
 | `transport` | No | `"stdio"` (default) or `"socket"` |
 | `env` | No | Environment variables |
-| `initializationOptions` | No | LSP initialization options |
+| `initializationOptions` | No | LSP initialisation options |
 | `settings` | No | LSP workspace settings |
 | `workspaceFolder` | No | Override workspace folder |
 | `startupTimeout` | No | Timeout for server startup (ms) |
