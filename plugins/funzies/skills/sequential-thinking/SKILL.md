@@ -1,6 +1,6 @@
 ---
 name: sequential-thinking
-description: Break down a complex problem into numbered sequential thoughts with calibrated confidence scores, tracked assumptions, and first-principles analysis, with support for revising and branching earlier thoughts. Use when the user asks to "use sequential thinking", "think through this step-by-step with confidence scores", or wants deep analysis of an uncertain, high-stakes, or multi-approach problem.
+description: "Break a problem into numbered reasoning steps, each carrying its evidence, assumptions, and a stated confidence, with support for revising and branching earlier steps. Use only on explicit request: \"use sequential thinking\", \"number the reasoning steps with confidence\", \"show the revision branches\", or a direct ask for a confidence-scored decision trace. Not for ordinary step-by-step explanations, routine planning or debugging, neutral assumption analysis (use first-principles), or scope trimming (use yagni)."
 ---
 
 # Sequential Thinking with First Principles
@@ -11,11 +11,11 @@ A problem-solving skill that integrates first principles thinking with confidenc
 
 The confidence scoring methodology in this skill is based on established research:
 
-- **Yang, Tsai, and Yamada (2024)**: "On Verbalized Confidence Scores for LLMs" - Foundational methodology for verbalizing confidence levels
+- **Yang, Tsai, and Yamada (2024)**: "On Verbalized Confidence Scores for LLMs" - Foundational methodology for verbalising confidence levels
 - **Li et al. (2025)**: "As Confidence Aligns: Exploring the Effect of AI Confidence on Human Self-confidence in Human-AI Decision Making"
 - **Ma et al. (2024)**: "Are You Really Sure?" - Confidence calibration improving human-AI team performance by up to 50%
 
-Key findings: Verbalized confidence scores become reliable indicators with proper methodology, and confidence calibration interventions dramatically improve decision-making quality.
+Key findings: Verbalised confidence scores become reliable indicators with proper methodology, and confidence calibration interventions dramatically improve decision-making quality.
 
 ## When to Use
 
@@ -52,7 +52,7 @@ Each thought in the sequential thinking process should include:
 1. **Thought Number**: Current step (e.g., "Thought 3/7")
 2. **Core Analysis**: The main reasoning for this step
 3. **Confidence Metrics**:
-   - **Confidence Score**: 0.0-1.0 (Very Low <0.4, Low 0.4-0.6, Medium 0.6-0.8, High 0.8-0.9, Very High ≥0.9)
+   - **Confidence Score**: 0.0-1.0, using the single scale under Confidence Calibration below
    - **Confidence Reasoning**: Explicit rationale for the score
    - **Uncertainty Factors**: Specific sources of uncertainty
 4. **First Principles Elements**:
@@ -89,28 +89,31 @@ When applying first principles thinking:
 
 Maintain calibrated confidence by:
 
-1. **Verbalize Confidence**: Explicitly state confidence level (0.0-1.0) using the scale above
-2. **Explain Reasoning**: Provide clear rationale for why this confidence level is assigned
-3. **Identify Uncertainties**: List specific factors that introduce doubt
-4. **Track Calibration**: Monitor patterns of over/underconfidence using `calibrationMetrics`
-5. **Adjust Based on Evidence**: Update confidence as new information emerges
-6. **Be Honest**: Lower scores for novel or complex situations are valuable information
+1. **State confidence**: give the level (0.0-1.0) using the scale above
+2. **Explain reasoning**: say why that level, in terms of the evidence at hand
+3. **Identify uncertainties**: list the specific factors that introduce doubt
+4. **Adjust based on evidence**: update confidence as new information emerges
+5. **Be honest**: a low score on a novel problem is useful information, not a failure
+
+Confidence is a judgement about the evidence available in this request. There is
+no cross-session store of past accuracy, so never report a historical hit rate,
+a previous-accuracy figure, or any other measured calibration statistic. Those
+numbers would be invented.
 
 #### Confidence Best Practices
 
 1. **Always explain your confidence**: Justify your score with specific reasoning
 2. **Be specific about uncertainty**: Identify exact sources of doubt
 3. **Consider multiple dimensions**: Evidence quality, problem complexity, time constraints, domain expertise
-4. **Track your accuracy**: Improve calibration over time
-5. **Be honest about limitations**: Acknowledge what you don't know
-6. **Update dynamically**: Revise confidence as information changes
+4. **Be honest about limitations**: Acknowledge what you don't know
+5. **Update dynamically**: Revise confidence as information changes
 
 ## Output Format
 
 Structure thoughts using clear markdown formatting:
 
 ```markdown
-## 💭 Thought {N}/{Total} [{Confidence Level}: {Score}%]
+## 💭 Thought {N}/{Total} [{Confidence Level}: {Score}]
 
 {Core reasoning and analysis}
 
@@ -147,7 +150,7 @@ Structure thoughts using clear markdown formatting:
 ### Example 1: System Architecture Decision
 
 ```markdown
-## 💭 Thought 1/5 [Medium: 65%]
+## 💭 Thought 1/5 [Medium: 0.65]
 
 Evaluating whether to use microservices or monolithic architecture for the genealogy scraper.
 
@@ -176,25 +179,22 @@ Evaluating whether to use microservices or monolithic architecture for the genea
 - **Reasoning from Zero**: Yes - evaluating based on actual requirements, not trends
 
 ### ➡️ Next Step
-Needed - will analyze deployment complexity and operational overhead trade-offs
+Needed - will analyse deployment complexity and operational overhead trade-offs
 ```
 
 ### Example 2: Bug Investigation
 
 ```markdown
-## 💭 Thought 3/6 [High: 85%]
+## 💭 Thought 3/6 [High: 0.85]
 
 The cookie persistence issue stems from Panther and Guzzle using separate cookie storage mechanisms.
 
 ### 🎯 Confidence Assessment
 - **Score**: 0.85 (High)
-- **Reasoning**: Code inspection shows two distinct CookieJar implementations; logs confirm desynchronization
+- **Reasoning**: Code inspection shows two distinct CookieJar implementations; logs confirm desynchronisation
 - **Uncertainty Factors**:
   - Haven't verified Panther's internal cookie storage format
   - Possible race conditions not yet tested
-- **Calibration Metrics**:
-  - Previous Accuracy: 82%
-  - Uncertainty Awareness: 88%
 
 ### 🔧 First Principles Analysis
 - **Assumptions Challenged**:
@@ -213,54 +213,6 @@ The cookie persistence issue stems from Panther and Guzzle using separate cookie
 Needed - will design cookie synchronization service to bridge the two systems
 ```
 
-### Example 3: First Principles Cost Analysis (Battery Example)
-
-```markdown
-## 💭 Thought 2/6 [Very High: 90%]
-
-Instead of accepting the $600/kWh battery pack cost, breaking down to raw material costs reveals significant optimization opportunity.
-
-### 🎯 Confidence Assessment
-- **Score**: 0.90 (Very High)
-- **Reasoning**: Commodity prices are publicly verifiable facts from London Metal Exchange, not estimates
-- **Uncertainty Factors**:
-  - Manufacturing process costs not yet calculated
-  - Economies of scale assumptions need validation
-- **Calibration Metrics**:
-  - Previous Accuracy: 91% (strong track record on cost analysis)
-  - Uncertainty Awareness: 94%
-
-### 🔧 First Principles Analysis
-- **Assumptions Identified**:
-  - "Battery packs must cost $600/kWh" (industry standard)
-  - "We need to buy from existing suppliers"
-  - "Battery technology is mature and optimized"
-- **Assumptions Challenged**:
-  - Industry pricing includes massive supplier margins
-  - Traditional automotive supply chains add unnecessary costs
-  - "Mature" doesn't mean "optimal" - just means "established"
-- **Fundamental Truths**:
-  - Lithium costs $7/kg on commodity markets
-  - Cobalt costs $33/kg
-  - Nickel costs $14/kg
-  - Raw materials cost ≈$80/kWh at market prices (87% cheaper than $600)
-- **Analogies Avoided**:
-  - NOT copying automotive industry battery procurement patterns
-  - NOT using traditional OEM supplier chains
-  - NOT accepting "industry standard" pricing
-- **Reconstructed Solution**:
-  - Vertical integration: purchase raw materials directly
-  - In-house cell production to eliminate supplier margins
-  - Target: $120/kWh (materials + manufacturing) vs industry $600/kWh
-- **Evidence Base**:
-  - London Metal Exchange commodity price data
-  - Chemical composition of lithium-ion cells (verified)
-  - Manufacturing process breakdown (researched)
-- **Reasoning from Zero**: YES - built from commodity prices up, not from competitor prices down
-
-### ➡️ Next Step
-Needed - will analyze manufacturing process costs and economies of scale requirements
-```
 
 ## Best Practices
 
@@ -314,9 +266,9 @@ Needed - will analyze manufacturing process costs and economies of scale require
 ### Example Revision:
 
 ```markdown
-## 🔄 Revision: Thought 4/8 (revising thought 2) [Medium: 65%]
+## 🔄 Revision: Thought 4/8 (revising thought 2) [Medium: 0.65]
 
-After analyzing the actual API response format, my earlier assumption about GraphQL was incorrect.
+After analysing the actual API response format, my earlier assumption about GraphQL was incorrect.
 
 ### 🎯 Confidence Assessment
 - **Score**: 0.65 (Medium)
@@ -338,7 +290,7 @@ Needed - will implement multipart request handler based on actual format
 ### Example Branch:
 
 ```markdown
-## 🌿 Branch: Thought 5a/8 (from thought 4, ID: alternative-cache-strategy) [High: 80%]
+## 🌿 Branch: Thought 5a/8 (from thought 4, ID: alternative-cache-strategy) [High: 0.80]
 
 Exploring Redis caching as alternative to filesystem cache.
 
@@ -390,49 +342,5 @@ Needed - will benchmark filesystem vs Redis for actual usage patterns
 - **Architecture Decisions**: Apply first principles to avoid cargo culting
 - **Debugging**: Track confidence in hypotheses, revise as evidence emerges
 - **Code Review**: Challenge assumptions in implementation approaches
-- **Performance Optimization**: Reason from fundamental algorithmic complexity
+- **Performance Optimisation**: Reason from fundamental algorithmic complexity
 
-## How to Activate This Skill
-
-### Automatic Activation
-
-I will automatically apply this methodology when encountering:
-- Complex architectural decisions or system design questions
-- Problems requiring deep analysis with uncertain solutions
-- Situations where industry standards should be challenged
-- Debugging complex issues with multiple potential causes
-- Cost optimization or resource allocation decisions
-- Algorithm design or performance optimization
-- Any problem where breaking down assumptions and reasoning from fundamentals adds value
-
-### Explicit Activation
-
-You can explicitly request this approach with phrases like:
-- "Use sequential thinking to analyze..."
-- "Apply first principles thinking to..."
-- "Think through this step-by-step with confidence scores..."
-- "Break this down using first principles..."
-- "Analyze this with sequential thinking..."
-
-### Output Indicators
-
-When using this skill, you'll see structured thought blocks with:
-- 💭 for normal thoughts
-- 🔄 for revisions
-- 🌿 for branches
-- Confidence scores and reasoning
-- First principles analysis sections
-- Clear next-step indicators
-
-## Comparison to MCP Server
-
-This skill replaces the Sequential Thinking MCP server by providing the same methodology directly in conversations without requiring external tool infrastructure. The key difference is that while the MCP server formatted and logged thoughts externally, this skill integrates the same thinking process into my natural responses with clear markdown formatting.
-
-Benefits of the skill approach:
-- No external dependencies or configuration needed
-- Seamless integration into conversation flow
-- Full control over when and how to apply the methodology
-- More flexible formatting adapted to context
-- Immediate availability without setup
-
-The research foundation (Yang et al. 2024, Li et al. 2025, Ma et al. 2024) and methodologies remain identical.
