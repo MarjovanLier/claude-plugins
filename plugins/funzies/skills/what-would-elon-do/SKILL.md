@@ -2,6 +2,7 @@
 name: what-would-elon-do
 description: "What Would Elon Do? Analyse a problem through Elon Musk's decision-making style: the 5-step process, physics-first thinking, aggressive deletion. Use only on explicit request: when someone says 'what would elon do', 'WWED', 'give me the Elon take', or asks for a deliberately bold or contrarian reading of a plan. Not for neutral analysis of assumptions or constraints (use first-principles), trimming speculative scope (use yagni), or safety, legal, personnel, and routine implementation decisions."
 argument-hint: "[situation or question]"
+version: 1.0.0
 ---
 
 Analyse this through Elon's decision-making style. Apply it as a genuinely useful framework, not parody.

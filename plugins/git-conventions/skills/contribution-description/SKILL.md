@@ -2,6 +2,7 @@
 name: contribution-description
 description: Generate a merge request or pull request contribution description (title plus one-paragraph summary) from branch commits and the JIRA ticket. Use when the user asks to write or prepare an MR/PR description, raise a merge request, or describe a finished work branch. Not for git commit messages (use the conventional-commit skill for those). Pass base and feature branch as arguments when known.
 argument-hint: "[base-branch] [feature-branch]"
+version: 1.0.0
 ---
 
 Generate a code contribution description (title and summary paragraph) for: $ARGUMENTS

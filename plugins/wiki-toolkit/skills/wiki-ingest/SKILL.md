@@ -1,6 +1,7 @@
 ---
 name: wiki-ingest
 description: Ingest one explicitly identified input into the wiki as a single transaction. A URL, file, pasted text, command output, stated fact, or an investigation result from the current session. Use when the user asks to add a specific input or finding to the wiki, says "wiki this" or "ingest this into the wiki", or asks to record a conclusion, decision, or finding permanently. Generic "ingest this" or "file this" without wiki context is not this skill. Not for behavioural rules or memory updates, not for end-of-thread or pre-compaction knowledge sweeps (use wiki-checkpoint), and not for wiki health checks (use wiki-lint).
+version: 1.0.0
 ---
 
 # Wiki Ingest

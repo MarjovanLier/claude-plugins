@@ -2,6 +2,7 @@
 name: conventional-commit
 description: Create and validate commit messages following the Conventional Commits standard. Use when committing code, reviewing commit messages, converting existing commits to conventional format, or when someone asks about commit message formatting. Also use proactively when preparing commits to ensure compliance, and when a commit linter (commitlint or a commit-msg hook) rejects a commit message and the last commit needs correcting and amending.
 argument-hint: "[create|validate|convert|fix] [optional message, branch, or linter output]"
+version: 1.0.0
 ---
 
 # Conventional Commits

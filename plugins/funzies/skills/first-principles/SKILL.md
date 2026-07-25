@@ -2,6 +2,7 @@
 name: first-principles
 description: "Neutral first-principles decomposition: separate the assumptions behind a decision from the constraints that actually bind, then rebuild. Use when someone says 'challenge the assumptions', 'reason from first principles', 'rethink this from the ground up', asks which constraints are genuinely fundamental, or justifies a consequential choice with 'best practice', 'industry standard', or 'we've always done it this way'. Also for make-versus-buy calls and estimates that rest on unexamined premises. Not for trimming speculative feature scope alone (use yagni), a deliberately bold or persona-styled take (use what-would-elon-do), or routine implementation decisions."
 argument-hint: "[problem or question]"
+version: 1.0.0
 ---
 
 Break down the following problem using first-principles reasoning. No analogies to other solutions. No "best practices". No "industry standard". Start from what is physically, logically, or mathematically true and rebuild.

@@ -1,6 +1,7 @@
 ---
 name: sequential-thinking
 description: "Break a problem into numbered reasoning steps, each carrying its evidence, assumptions, and a stated confidence, with support for revising and branching earlier steps. Use only on explicit request: \"use sequential thinking\", \"number the reasoning steps with confidence\", \"show the revision branches\", or a direct ask for a confidence-scored decision trace. Not for ordinary step-by-step explanations, routine planning or debugging, neutral assumption analysis (use first-principles), or scope trimming (use yagni)."
+version: 1.0.0
 ---
 
 # Sequential Thinking with First Principles
