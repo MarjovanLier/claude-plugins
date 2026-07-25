@@ -20,7 +20,7 @@ Same cascade as the checkpoint: `<project root>/wiki/` when it exists, otherwise
 
 ## Git safety
 
-- Global destination: run `git -C ~/wiki pull` before reading its schema or pages. A failed pull blocks all writes; report `not written: global wiki pull failed`.
+- Global destination: run `git -C ~/wiki pull --ff-only` before reading its schema or pages. `--ff-only` is required: a plain `pull` may merge or rebase depending on the user's config, invoking hooks and touching files this ingest never intended to change. A failed or non-fast-forward pull blocks all writes; report `not written: global wiki pull failed`.
 - Any git-repo destination: before the first write, determine every file the ingest will touch (raw capture, pages, index, log) and run `git status`. If any of them already carries uncommitted changes, the whole transaction is blocked before the first write: report `not written: blocked by pre-existing local changes` and name the dirty files. Never sweep pre-existing uncommitted changes into the ingest commit.
 
 ## Workflow
@@ -44,7 +44,7 @@ In this order, always all three:
 
 1. The destination's index or equivalent catalogue.
 2. Exact-pattern `rg` over the page store for concrete terms (names, IDs, slugs, dates).
-3. Semantic search through the collection matching the destination (`mcp__qmd__query`, collection `global-wiki` for `~/wiki/`). No matching collection or tool: a separate text search using synonyms and paraphrases of the topic is the fallback; repeating step 2's exact terms does not satisfy step 3.
+3. Semantic search through the collection matching the destination. Resolve it by absolute path via `mcp__qmd__status`, never by guessing the collection name; scope the `mcp__qmd__query` call to that collection and always pass an `intent`. When the qmd tools are deferred, load them first in one ToolSearch call; deferred is not absent. No matching collection or no qmd: a separate text search using synonyms and paraphrases of the topic is the fallback; repeating step 2's exact terms does not satisfy step 3.
 
 Step 3 is not optional at any scale and "the index grep found nothing" does not skip it: lexical search misses paraphrased overlap, which is exactly the duplicate this step exists to catch. Open every page you might touch before deciding anything.
 
@@ -68,7 +68,7 @@ Order: raw capture (before any page that cites it), then pages, then index, then
 
 ### 5. Lint
 
-Only after the ingest made wiki writes: the destination's own lint script when present; for the global wiki, `~/wiki/scripts/lint_wiki.sh` (it also refreshes the qmd index). Fix errors the ingest introduced; report pre-existing warnings without fixing unrelated content. A project wiki without a lint script: report `Lint: not run (no project lint script)`. A blocked, paused, or no-write outcome reports `Lint: not run (<reason>)`.
+Only after the ingest made wiki writes: the destination's own lint script when present (`<wiki>/scripts/lint_wiki.sh`, which also refreshes the qmd index). Fix errors the ingest introduced; report pre-existing warnings without fixing unrelated content. A project wiki without a lint script: report `Lint: not run (no project lint script)`. No lint script available for the destination at all: report `Lint: not run (no compatible lint runner)`; this plugin does not bundle one, and a lint that did not execute is never reported as clean. A blocked, paused, or no-write outcome reports `Lint: not run (<reason>)`.
 
 ### 6. Commit and push
 

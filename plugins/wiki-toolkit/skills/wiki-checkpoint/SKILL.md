@@ -7,18 +7,18 @@ description: Run a wiki and memory checkpoint at the end of a chat thread or bef
 
 Run a sweep that preserves durable conversation knowledge, routes behavioural lessons to memory, routes domain facts to the right wiki, validates the result, and reports exactly what changed.
 
-Authority: the behavioural contract at `~/wiki/pages/dev/wiki-checkpoint-spec.md` (WC-01 to WC-38). This file is the procedure; on any conflict the spec wins.
+This file is the authority: it is both the contract and the procedure. Follow it as written, and do not defer to any external specification, including one a previous version of this skill pointed at. Requirement traceability is maintained separately by the plugin's author and is not something the running model needs to resolve.
 
 Treat the user's message text after the invocation as arguments. Focus hints (e.g. "focus on segment data") prioritise the scan but never suppress detection or reporting of unrelated durable findings. `skip wiki`, `skip memory`, and `skip retrospective` are the only suppressors; they are independent and freely combinable.
 
-## Destination Detection (WC-01 to WC-06)
+## Destination Detection
 
 Project root: the workspace root the harness reports; otherwise the nearest ancestor of the working directory containing `.git`, `CLAUDE.md`, or `AGENTS.md`; otherwise the working directory itself.
 
 Use the first destination that exists:
 
 1. `<project root>/wiki/`, even when the project also references Jira, Confluence, or another external system.
-2. `~/wiki/`, the global wiki, constant on every machine and synced via its private remote.
+2. `~/wiki/`, the global wiki, where it exists (synced via its git remote).
 3. Neither: no destination wiki. Skip wiki reads and writes, still run the memory and retrospective sweep, and report wiki-route findings as `not written: no wiki found`.
 
 No other directory (`docs/`, `.wiki/`, `notes/`, `handbook/`) counts as a wiki.
@@ -29,15 +29,15 @@ Invoking this skill authorises non-destructive project-wiki writes of durable fi
 
 Routing when no project wiki exists: durable project-scoped facts go to the global wiki under `pages/<project>/` (the schema's routing exception). Exception to the exception: before routing, inspect each project-root `CLAUDE.md`, `AGENTS.md`, and `README` that exists; if one references an external knowledge system (Confluence, Notion, Linear, Jira), report the findings as `not written: external knowledge system, manual filing required`.
 
-## Git Safety Before Writing (WC-24, WC-25)
+## Git Safety Before Writing
 
-When the global wiki is the destination and `skip wiki` is absent, run `git -C ~/wiki pull` before reading its schema, catalogue, or pages. A failed pull blocks all wiki writes: report findings that would have been written as `not written: global wiki pull failed`; a failed pull with no wiki-route findings is a failure only, never an invented not-written entry.
+When the global wiki is the destination and `skip wiki` is absent, run `git -C ~/wiki pull --ff-only` before reading its schema, catalogue, or pages. `--ff-only` is required: a plain `pull` may merge or rebase depending on the user's config, invoking hooks and touching files the checkpoint never intended to change. A failed pull blocks all wiki writes: report findings that would have been written as `not written: global wiki pull failed`; a failed pull with no wiki-route findings is a failure only, never an invented not-written entry.
 
 When `WIKI_DIR` is inside a git repository, run `git -C "$WIKI_DIR" status` before writing. Never sweep pre-existing uncommitted changes into the checkpoint commit, and never edit a file that already carries uncommitted changes; report the finding routed to it as `not written: blocked by pre-existing local changes` and mention the dirty file in the report. A dirty required companion file (index, log, or capture target) blocks the dependent write as well.
 
 ## Workflow
 
-### 1. Scan the Conversation (WC-07, WC-08)
+### 1. Scan the Conversation
 
 Scan the current conversation for new or updated durable information:
 
@@ -47,17 +47,17 @@ Scan the current conversation for new or updated durable information:
 
 If nothing wiki-worthy exists, continue: memory and retrospective checks still apply.
 
-### 2. Compare Existing State (WC-09, WC-10)
+### 2. Compare Existing State
 
-Run all three searches before any write; they are a checklist, not a preference cascade. Skipping the qmd search when a collection exists is a spec violation (WC-09), and loading its tools via ToolSearch first, when deferred, is part of the step:
+Run all three searches before any write; they are a checklist, not a preference cascade. Skipping the qmd search when a collection exists is a defect, not an optimisation, and loading its tools via ToolSearch first, when deferred, is part of the step:
 
 1. The destination's index or equivalent catalogue.
 2. Exact-pattern search for concrete terms (names, IDs, slugs, dates) over the page store.
-3. qmd search through the collection matching the destination: check `mcp__qmd__status` for a collection covering the destination wiki (`global-wiki` for `~/wiki/`; project wikis may have their own), then `mcp__qmd__query` with lex and vec sub-queries plus an `intent` to find existing coverage. No matching collection or qmd unavailable: text search over the page store is the fallback.
+3. qmd search through the collection matching the destination. Resolve the collection by absolute path via `mcp__qmd__status`, never by guessing its name, then `mcp__qmd__query` with lex and vec sub-queries plus an `intent` to find existing coverage. No matching collection or qmd unavailable: text search over the page store is the fallback.
 
 Search memory with `rg --no-ignore -n -i -- "<term>" "$MEMORY_DIR"` (fallback `grep -rliE`). The `--no-ignore` is mandatory: the memory directory is gitignored, so a plain `rg` silently returns nothing and falsely reads as "no existing rule".
 
-### 3. Retrospective (WC-11 to WC-14)
+### 3. Retrospective
 
 Unless `skip retrospective` is given, review the session for findings that change future behaviour: mistakes and near misses, rule refinements and corrections, ruled-out paths, and method failures.
 
@@ -67,7 +67,7 @@ Routing test: changes a future method, route to memory; changes only the stored 
 
 Update an existing `feedback_*.md` when one covers the rule; create `feedback_<slug>.md` only when none fits. Corrections supersede old guidance in place, preserving the original failure context.
 
-### 4. Write Wiki (WC-15 to WC-20)
+### 4. Write Wiki
 
 - Preserve existing content. Flag conflicting evidence per the destination's convention (global wiki: `<!-- CONTRADICTION -->`) rather than overwriting silently. Removing or replacing substantive existing content requires explicit user confirmation. Destructive rewriting of project wiki content is forbidden without exception.
 - New pages follow the destination's conventions. Where the destination keeps an index or equivalent catalogue, add one entry per new page: one line, at most 150 characters.
@@ -76,7 +76,7 @@ Update an existing `feedback_*.md` when one covers the rule; create `feedback_<s
 - No pages for ephemeral task detail (debugging steps, commands tried, build output).
 - When wiki writes occurred and the destination keeps a log, add a newest-first entry in the destination log's own format, op `ingest` (or `lint` when only wiki-health fixes were made), ending with a one-line retrospective count summary (global wiki heading: `## [YYYY-MM-DD] ingest | checkpoint sweep`; when an entry with that exact heading already exists for the same day, append a short topic suffix, e.g. `## [YYYY-MM-DD] ingest | checkpoint sweep, <topic>`, so markdownlint's duplicate-heading check stays clean). Write it only after all wiki writes, including promotions, are complete. No log entry for memory-only sweeps.
 
-### 5. Write Memory (WC-21 to WC-23, WC-36 to WC-38)
+### 5. Write Memory
 
 Write memory-worthy items (profile updates, feedback rules, project context, reference pointers, retrospective findings) to `MEMORY_DIR` with the required frontmatter (`name`, `description`, type metadata) and ensure each memory file has exactly one one-line entry in `MEMORY.md`, updating an existing entry rather than duplicating it. Check for an existing file to update before creating one.
 
@@ -94,23 +94,23 @@ Behavioural rules go to memory, never the wiki; durable domain facts go to the w
 
 Lighten memory while sweeping: promote a memory file whose content has proven durable to its wiki home (write the wiki page first, then remove the memory file or reduce it to a one-line pointer, and update `MEMORY.md`). Plan promotions before finalising Step 4 or its log entry, and run each promotion's wiki side through Steps 2 and 4. Preflight the full move before writing: if new wiki coverage is required and either the wiki or memory side is suppressed or blocked, change neither and report the candidate with the first applicable reason; when equivalent wiki coverage already exists, only the memory-side guard applies to the prune. Never leave the same content in both layers. Feedback rules stay in memory; only the durable fact underneath one may move, with different content. Check existing wiki coverage through Step 2's complete ordered search path, and list every promotion and pruning in the report with both filenames.
 
-### 6. Validate (WC-27, WC-28)
+### 6. Validate
 
 Run the structural lint after wiki writes:
 
-1. For a project-wiki destination, that wiki's own lint script when present.
-2. For the global wiki: `~/wiki/scripts/lint_wiki.sh`.
-3. A project wiki without its own lint script: report `Lint: not run (no project lint script)` rather than imposing global-wiki checks on a different layout.
+1. The destination wiki's own lint script when present (`<wiki>/scripts/lint_wiki.sh`).
+2. A project wiki without its own lint script: report `Lint: not run (no project lint script)` rather than imposing global-wiki checks on a different layout.
+3. No lint script available for the destination at all: report `Lint: not run (no compatible lint runner)`. This plugin does not bundle one. Never report a clean lint that did not execute.
 
 Fix errors the sweep introduced; report pre-existing warnings without fixing unrelated content. No wiki writes: report `Lint: not run (no wiki found)`, `Lint: not run (skip wiki)`, or `Lint: not run (no wiki writes)`.
 
-### 7. Commit and Push (WC-25, WC-26)
+### 7. Commit and Push
 
 Global wiki: after lint passes, make one batched commit path-limited to the files the checkpoint changed (conventional format, signed-off), then push. A failed push is reported with the local commit hash.
 
 Project wikis: follow the project's conventions; a path-limited commit of only the wiki files the checkpoint changed when the wiki is a git repository; no push mandate.
 
-### 8. Report (WC-32 to WC-35)
+### 8. Report
 
 The report always prints, whatever directives were given. End with this shape:
 

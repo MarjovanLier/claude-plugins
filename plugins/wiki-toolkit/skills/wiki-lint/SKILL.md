@@ -29,26 +29,34 @@ first that exists:
    else. Confirm it is genuinely a wiki (contains `SCHEMA.md`, `index.md`, `log.md`,
    or a `pages/` layout) rather than an unrelated folder that happens to be named
    `wiki`.
-2. **Global wiki**: otherwise `~/wiki/` (synced via its git remote).
-   This always exists on a configured machine.
+2. **Global wiki**: otherwise `~/wiki/`, where it exists (synced via its git remote).
 
-If the user names a wiki explicitly, use that. If only the global wiki exists, use it.
+If the user names a wiki explicitly, use that. If neither location exists, report
+`No wiki found` and stop: there is nothing to lint, and no directory should be created
+to satisfy the request.
 
 ## 2. Choose the lint runner
 
 The lint logic lives in a shell script. Resolve it in this order:
 
-1. **Project's own script**: if `$WIKI_DIR` (or its repo root) has `scripts/lint_wiki.sh`,
-   run that. It encodes the project's house rules.
-2. **Global script**: otherwise run the global one against the detected wiki. It
-   takes the wiki directory as its first argument and auto-detects `pages/` vs
-   `concepts/` and the index file, so it works on any Karpathy-style layout:
+1. **The wiki's own script**: if `$WIKI_DIR` (or its repo root) has `scripts/lint_wiki.sh`,
+   run that. It encodes that wiki's house rules.
 
    ```bash
-   ~/wiki/scripts/lint_wiki.sh "$WIKI_DIR"
+   "$WIKI_DIR/scripts/lint_wiki.sh" "$WIKI_DIR"
    ```
 
-   Run with no argument, it lints `~/wiki` itself.
+2. **A project wiki with no script of its own**: report
+   `Lint: not run (no project lint script)` and stop. Do NOT fall back to the global
+   script. Its checks encode global-wiki conventions (frontmatter fields, status
+   values, citation format) that a different layout does not share, so running it
+   there produces false errors and invites destructive "fixes". This matches the rule
+   the checkpoint and ingest skills already follow.
+
+3. **The global wiki with no script present**: the script is not bundled with this
+   plugin. Report `Lint: not run (no compatible lint runner)` and stop. Never report a
+   clean lint that did not execute, and never hand-roll a substitute set of structural
+   checks against a wiki whose conventions you have not read.
 
 ## 3. Run it and read the summary
 
