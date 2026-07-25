@@ -14,9 +14,9 @@ The confidence scoring methodology in this skill is based on established researc
 
 - **Yang, Tsai, and Yamada (2024)**: "On Verbalized Confidence Scores for LLMs" - Foundational methodology for verbalising confidence levels
 - **Li et al. (2025)**: "As Confidence Aligns: Exploring the Effect of AI Confidence on Human Self-confidence in Human-AI Decision Making"
-- **Ma et al. (2024)**: "Are You Really Sure?" - Confidence calibration improving human-AI team performance by up to 50%
+- **Ma et al. (2024)**: "Are You Really Sure? Understanding the Effects of Human Self-Confidence Calibration in AI-Assisted Decision Making" (CHI 2024)
 
-Key findings: Verbalised confidence scores become reliable indicators with proper methodology, and confidence calibration interventions dramatically improve decision-making quality.
+These motivate the format below; none of them measures this skill, so treat them as background rather than evidence that its scores are calibrated. Reported effect sizes belong to each paper's own task and population, and do not transfer to a stated confidence in a conversation.
 
 ## When to Use
 
@@ -33,7 +33,7 @@ Particularly valuable for:
 - **High-stakes decision making**: Where understanding certainty levels is critical
 - **Complex problem solving**: When multiple valid approaches exist
 - **Collaborative reasoning**: When confidence alignment improves team performance
-- **Learning and calibration**: When improving judgment accuracy over time
+- **Learning and calibration**: When improving judgement accuracy over time
 - **Risk assessment**: When uncertainty quantification affects outcomes
 - **Research and analysis**: When evidence quality varies significantly
 
