@@ -2,6 +2,8 @@
   "php": {
     "command": "lspx",
     "args": [
+      "--lsp", "phpantom_lsp --stdio",
+      "--lsp", "phpforge lsp",
       "--lsp", "intelephense --stdio",
       "--lsp", "phpactor language-server"
     ],

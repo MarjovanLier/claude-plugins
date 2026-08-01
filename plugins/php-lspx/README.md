@@ -1,10 +1,10 @@
 # php-lspx
 
-Claude Code plugin providing PHP language support by multiplexing two language servers behind a single LSP: [intelephense](https://intelephense.com/) for completion and diagnostics, and [phpactor](https://phpactor.readthedocs.io/) for refactoring and code actions.
+Claude Code plugin providing PHP language support by multiplexing four language servers behind a single LSP: [intelephense](https://intelephense.com/) for completion and diagnostics, [phpactor](https://phpactor.readthedocs.io/) for refactoring and code actions, phpantom-lsp, and phpforge for ported PHP Hammer and EA Extended inspections.
 
 ## Description
 
-Claude Code accepts only one language server per file type. To run intelephense and phpactor together, this plugin points Claude Code at [lspx](https://github.com/thefrontside/lspx), a language server multiplexer that starts both servers, fans each request out to both, and merges their responses.
+Claude Code accepts only one language server per file type. To run them together, this plugin points Claude Code at [lspx](https://github.com/thefrontside/lspx), a language server multiplexer that starts every configured server, fans each request out to all of them, and merges their responses.
 
 Intelephense handles completion and diagnostics; phpactor adds refactorings and code actions that intelephense does not provide.
 
@@ -15,7 +15,8 @@ Intelephense handles completion and diagnostics; phpactor adds refactorings and 
 - Code generation: implement interface, override methods (phpactor)
 - Go to definition / find references (both, merged)
 - Class generation and transformation (phpactor)
-- Import management (phpactor)
+- Import management (phpactor, phpantom-lsp)
+- PHP Hammer and EA Extended inspections with a fix-all code action (phpforge)
 
 ## Supported File Extensions
 
@@ -30,11 +31,13 @@ Intelephense handles completion and diagnostics; phpactor adds refactorings and 
 
 ## Requirements
 
-All three executables must be on your `PATH`:
+All five executables must be on your `PATH`:
 
 - `lspx` (the multiplexer)
 - `intelephense`
 - `phpactor`
+- `phpantom_lsp`
+- `phpforge`
 
 ### Installing lspx
 
@@ -64,17 +67,25 @@ mv phpactor.phar ~/.local/bin/phpactor
 # phpactor alternatives
 composer global require phpactor/phpactor   # via Composer
 brew install phpactor                       # via Homebrew
+
+# phpantom-lsp
+brew install phpantom-lsp
+
+# phpforge (local crate)
+cargo install --path /path/to/phpforge
 ```
 
 ## Configuration
 
-`.lsp.json` launches lspx, which starts both servers and merges their responses:
+`.lsp.json` launches lspx, which starts all four servers and merges their responses:
 
 ```json
 {
   "php": {
     "command": "lspx",
     "args": [
+      "--lsp", "phpantom_lsp --stdio",
+      "--lsp", "phpforge lsp",
       "--lsp", "intelephense --stdio",
       "--lsp", "phpactor language-server"
     ],
@@ -93,9 +104,15 @@ brew install phpactor                       # via Homebrew
 }
 ```
 
-lspx supervises both backends and restarts either if it crashes, so the unsupported `maxRestarts` and `restartOnCrash` fields are not used.
+Server order matters. lspx merges diagnostics from every backend, but for
+request/response methods (completion, hover) it does not always merge: with
+phpantom listed last, its reply replaces intelephense's and phpactor's.
+Listing phpantom first keeps intelephense authoritative for completion and
+hover while phpantom still contributes diagnostics and code actions.
 
 > Note: phpactor refuses to start when the client sends a null root URI, and lspx exits if a backend dies. Claude Code provides a workspace root, so this only bites if you launch the server outside a project.
+>
+> Note: lspx does not restart a failed backend, so the unsupported `maxRestarts` and `restartOnCrash` fields buy nothing. An error response from a backend takes the whole multiplexer down (exit 1). phpactor's outsourced code-action process does this on `textDocument/codeAction` when its php-cs-fixer or phpcs provider cannot parse the tool output.
 
 ## Schema Reference
 
