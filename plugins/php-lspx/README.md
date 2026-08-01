@@ -1,22 +1,34 @@
 # php-lspx
 
-Claude Code plugin providing PHP language support by multiplexing four language servers behind a single LSP: [intelephense](https://intelephense.com/) for completion and diagnostics, [phpactor](https://phpactor.readthedocs.io/) for refactoring and code actions, phpantom-lsp, and phpforge for ported PHP Hammer and EA Extended inspections.
+Claude Code plugin providing PHP language support by fanning one LSP connection out to four language servers: [intelephense](https://intelephense.com/) for completion and typed hover, [phpactor](https://phpactor.readthedocs.io/) for refactoring and code actions, phpantom-lsp for navigation, semantic tokens and external analysers, and phpforge for ported PHP Hammer and EA Extended inspections.
 
 ## Description
 
-Claude Code accepts only one language server per file type. To run them together, this plugin points Claude Code at [lspx](https://github.com/thefrontside/lspx), a language server multiplexer that starts every configured server, fans each request out to all of them, and merges their responses.
+Claude Code accepts only one language server per file type. To run several together, this plugin points Claude Code at `bin/lspfan`, a small multiplexer that starts every configured server, forwards each request to all of them, and merges the replies.
 
-Intelephense handles completion and diagnostics; phpactor adds refactorings and code actions that intelephense does not provide.
+It replaces [lspx](https://github.com/thefrontside/lspx), which the plugin used until version 2.0.0. lspx hangs Claude Code indefinitely on `textDocument/hover` and `textDocument/documentSymbol`: it forwards server-to-client requests such as `workspace/configuration` and `client/registerCapability` to a client that never answers them, then waits forever for a merge that cannot complete, with no timeout. Claude Code's side of that is tracked in [issue #32595](https://github.com/anthropics/claude-code/issues/32595) and [issue #16360](https://github.com/anthropics/claude-code/issues/16360), both still unresolved.
+
+## What lspfan does differently
+
+- **Answers server-to-client requests itself.** A proxy sits in the middle, so it replies to `workspace/configuration` with one empty object per requested item and to `client/registerCapability` with `null`, rather than forwarding them to a client that ignores them.
+- **Puts a deadline on every fan-out.** 5 seconds per request, 20 seconds for the handshake, both overridable with `LSPFAN_TIMEOUT` and `LSPFAN_INIT_TIMEOUT`. A slow or silent backend degrades the answer instead of hanging the editor.
+- **Treats a failing backend as an abstention.** An error response, a crash, or a missed handshake drops that server from the fan-out. It never takes the process down.
+- **Merges diagnostics per URI.** `publishDiagnostics` replaces the whole list for a file, so without merging the last server to publish would erase every other server's findings.
+
+Merge rules: list results concatenate and deduplicate, completion items merge into one list, hover blocks stack separated by a rule, anything else takes the first non-null answer.
+
+Set `LSPFAN_LOG=/path/to/file` to trace dispatch decisions.
 
 ## Features
 
-- Intelligent code completion and diagnostics (intelephense)
+- Code completion merged across servers (intelephense, phpantom-lsp)
+- Typed hover, showing each server's view of the symbol
+- Go to definition, find references, go to implementation, document symbols
 - Refactoring: extract method, rename, move class (phpactor)
 - Code generation: implement interface, override methods (phpactor)
-- Go to definition / find references (both, merged)
-- Class generation and transformation (phpactor)
 - Import management (phpactor, phpantom-lsp)
 - PHP Hammer and EA Extended inspections with a fix-all code action (phpforge)
+- Diagnostics merged from intelephense, phpantom-lsp, phpforge, phpactor, phpstan, mago and mago-lint
 
 ## Supported File Extensions
 
@@ -31,31 +43,12 @@ Intelephense handles completion and diagnostics; phpactor adds refactorings and 
 
 ## Requirements
 
-All five executables must be on your `PATH`:
-
-- `lspx` (the multiplexer)
-- `intelephense`
-- `phpactor`
-- `phpantom_lsp`
-- `phpforge`
-
-### Installing lspx
-
-lspx is a Deno CLI with no published binary, so compile it once. Deno >= 2.0 is needed only for the build; the result is a self-contained binary.
+`lspfan` needs only Python 3, which macOS and most Linux distributions already provide. Install it and the four servers onto your `PATH`:
 
 ```bash
-# Install Deno if needed: brew install deno
-git clone --depth 1 https://github.com/thefrontside/lspx
-cd lspx
-deno task compile            # produces dist/lspx
-mv dist/lspx ~/.local/bin/   # any directory on your PATH
+# the multiplexer, shipped with this plugin
+install -m 755 bin/lspfan ~/.local/bin/lspfan
 
-lspx --help                  # verify
-```
-
-### Installing the language servers
-
-```bash
 # intelephense
 npm install -g intelephense
 
@@ -77,12 +70,10 @@ cargo install --path /path/to/phpforge
 
 ## Configuration
 
-`.lsp.json` launches lspx, which starts all four servers and merges their responses:
-
 ```json
 {
   "php": {
-    "command": "lspx",
+    "command": "lspfan",
     "args": [
       "--lsp", "phpantom_lsp --stdio",
       "--lsp", "phpforge lsp",
@@ -104,15 +95,11 @@ cargo install --path /path/to/phpforge
 }
 ```
 
-Server order matters. lspx merges diagnostics from every backend, but for
-request/response methods (completion, hover) it does not always merge: with
-phpantom listed last, its reply replaces intelephense's and phpactor's.
-Listing phpantom first keeps intelephense authoritative for completion and
-hover while phpantom still contributes diagnostics and code actions.
+Server order no longer matters, unlike under lspx where the last-listed server's reply could replace the others on completion and hover.
 
-> Note: phpactor refuses to start when the client sends a null root URI, and lspx exits if a backend dies. Claude Code provides a workspace root, so this only bites if you launch the server outside a project.
->
-> Note: lspx does not restart a failed backend, so the unsupported `maxRestarts` and `restartOnCrash` fields buy nothing. An error response from a backend takes the whole multiplexer down (exit 1). phpactor's outsourced code-action process does this on `textDocument/codeAction` when its php-cs-fixer or phpcs provider cannot parse the tool output.
+> Note: phpactor's phpcs provider fails when `vendor/bin/phpcs` is absent, returning output it cannot parse and exiting 255. lspfan drops the server for that request rather than dying, but the code action is lost, so disable the provider in `~/.config/phpactor/phpactor.json` with `"php_code_sniffer.enabled": false`. phpactor reads only that global file; a project-level `.phpactor.json` is ignored.
+
+> Note: results appear once per answering server, so a class shows up in `documentSymbol` as many times as there are servers that implement it. That is inherent to fanning out.
 
 ## Schema Reference
 

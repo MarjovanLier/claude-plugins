@@ -1,0 +1,319 @@
+#!/usr/bin/env python3
+"""lspfan: fan a single LSP connection out to several language servers.
+
+Drop-in for lspx: lspfan --lsp "intelephense --stdio" --lsp "phpantom_lsp --stdio"
+
+Three things it does that lspx does not, each one a bug we measured:
+  1. Answers server-to-client requests itself (workspace/configuration,
+     client/registerCapability). Claude Code never answers them, which blocks
+     any backend that waits for the reply.
+  2. Puts a deadline on every fan-out. A silent backend degrades the answer
+     instead of hanging the client forever.
+  3. Treats a backend error response as an abstention, never as fatal.
+"""
+import json
+import os
+import shlex
+import subprocess
+import sys
+import threading
+import time
+
+TIMEOUT = float(os.environ.get("LSPFAN_TIMEOUT", "5.0"))
+INIT_TIMEOUT = float(os.environ.get("LSPFAN_INIT_TIMEOUT", "20.0"))
+LOG = os.environ.get("LSPFAN_LOG")
+
+
+def log(msg):
+    if LOG:
+        with open(LOG, "a") as fh:
+            fh.write("%.3f %s\n" % (time.time(), msg))
+
+
+def read_message(stream):
+    """Read one LSP frame. Returns None at EOF."""
+    headers = {}
+    while True:
+        line = stream.readline()
+        if not line:
+            return None
+        line = line.decode("utf-8", "replace").strip()
+        if not line:
+            break
+        key, _, value = line.partition(":")
+        headers[key.strip().lower()] = value.strip()
+    length = int(headers.get("content-length", 0))
+    if not length:
+        return None
+    body = stream.read(length)
+    try:
+        return json.loads(body)
+    except ValueError:
+        return None
+
+
+class Writer:
+    """Serialises writes to one stream; LSP frames must not interleave."""
+
+    def __init__(self, stream):
+        self.stream = stream
+        self.lock = threading.Lock()
+
+    def send(self, msg):
+        raw = json.dumps(msg).encode("utf-8")
+        with self.lock:
+            try:
+                self.stream.write(b"Content-Length: %d\r\n\r\n" % len(raw) + raw)
+                self.stream.flush()
+            except (BrokenPipeError, ValueError):
+                pass
+
+
+class Pending:
+    """One client request fanned out to N backends."""
+
+    def __init__(self, method, expected):
+        self.method = method
+        self.expected = expected
+        self.results = {}
+        self.done = threading.Event()
+        self.lock = threading.Lock()
+
+    def add(self, name, message):
+        with self.lock:
+            self.results[name] = message
+            if len(self.results) >= self.expected:
+                self.done.set()
+
+
+class Backend:
+    def __init__(self, name, command, proxy):
+        self.name = name
+        self.proxy = proxy
+        self.proc = subprocess.Popen(shlex.split(command), stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE, stderr=None)
+        self.writer = Writer(self.proc.stdin)
+        self.capabilities = {}
+        threading.Thread(target=self.read_loop, daemon=True).start()
+
+    def read_loop(self):
+        while True:
+            msg = read_message(self.proc.stdout)
+            if msg is None:
+                log("%s: EOF" % self.name)
+                self.proxy.backend_gone(self.name)
+                return
+            self.proxy.from_backend(self, msg)
+
+
+def merge_results(method, results):
+    """Merge backend results. Lists concatenate, hovers stack, else first wins."""
+    values = [r.get("result") for r in results if "result" in r and r.get("result") is not None]
+    if not values:
+        return None
+
+    if all(isinstance(v, list) for v in values):
+        merged, seen = [], set()
+        for v in values:
+            for item in v:
+                key = json.dumps(item, sort_keys=True)
+                if key not in seen:
+                    seen.add(key)
+                    merged.append(item)
+        return merged
+
+    # completion comes back as either a list or {items: [...]}
+    if method == "textDocument/completion":
+        items, seen, incomplete = [], set(), False
+        for v in values:
+            incomplete = incomplete or (isinstance(v, dict) and v.get("isIncomplete", False))
+            for item in (v.get("items", []) if isinstance(v, dict) else v):
+                key = json.dumps(item, sort_keys=True)
+                if key not in seen:
+                    seen.add(key)
+                    items.append(item)
+        return {"isIncomplete": incomplete, "items": items}
+
+    if method == "textDocument/hover":
+        blocks = []
+        for v in values:
+            contents = v.get("contents") if isinstance(v, dict) else None
+            if isinstance(contents, dict):
+                blocks.append(contents.get("value", ""))
+            elif isinstance(contents, list):
+                blocks.extend(c.get("value", c) if isinstance(c, dict) else str(c) for c in contents)
+            elif contents:
+                blocks.append(str(contents))
+        text = "\n\n---\n\n".join(b for b in blocks if b)
+        return {"contents": {"kind": "markdown", "value": text}} if text else values[0]
+
+    return values[0]
+
+
+def merge_capabilities(caps_list):
+    """Union of backend capabilities; a truthy value from any backend wins."""
+    merged = {}
+    for caps in caps_list:
+        for key, value in (caps or {}).items():
+            if key not in merged or not merged[key]:
+                merged[key] = value
+            elif isinstance(merged[key], dict) and isinstance(value, dict):
+                combined = dict(value)
+                combined.update(merged[key])
+                merged[key] = combined
+    return merged
+
+
+class Proxy:
+    def __init__(self, commands):
+        self.client = Writer(sys.stdout.buffer)
+        self.pending = {}
+        self.pending_lock = threading.Lock()
+        self.next_id = 0
+        self.diagnostics = {}          # uri -> {backend: [diagnostic]}
+        self.diag_lock = threading.Lock()
+        self.dead = set()
+        self.backends = [Backend("lsp%d" % i, cmd, self) for i, cmd in enumerate(commands)]
+
+    def live(self):
+        return [b for b in self.backends if b.name not in self.dead]
+
+    def backend_gone(self, name):
+        self.dead.add(name)
+        with self.pending_lock:
+            for pending in self.pending.values():
+                pending.add(name, {"result": None})
+
+    # client -> backends
+    def from_client(self, msg):
+        if "method" not in msg:
+            return  # a response to something we asked; we ask nothing of the client
+        if "id" not in msg:
+            self.notify_backends(msg)
+            return
+
+        method, cid = msg["method"], msg["id"]
+        targets = self.live()
+        pending = Pending(method, len(targets))
+        with self.pending_lock:
+            self.pending[cid] = pending
+
+        for backend in targets:
+            backend.writer.send({"jsonrpc": "2.0", "id": "%s@%s" % (cid, backend.name),
+                                 "method": method, "params": msg.get("params")})
+
+        timeout = INIT_TIMEOUT if method == "initialize" else TIMEOUT
+        threading.Thread(target=self.reply_when_ready, args=(cid, pending, timeout),
+                         daemon=True).start()
+
+    def reply_when_ready(self, cid, pending, timeout):
+        if not pending.done.wait(timeout):
+            log("timeout %s: %d/%d replied" % (pending.method, len(pending.results), pending.expected))
+        with self.pending_lock:
+            self.pending.pop(cid, None)
+        results = list(pending.results.values())
+
+        if pending.method == "initialize":
+            # a backend that cannot even handshake is dead to us; keeping it in the
+            # fan-out would cost every later request the full TIMEOUT
+            for backend in self.backends:
+                if backend.name not in pending.results:
+                    log("%s missed initialize, dropping" % backend.name)
+                    self.dead.add(backend.name)
+            caps = merge_capabilities([r.get("result", {}).get("capabilities", {})
+                                       for r in results if isinstance(r.get("result"), dict)])
+            for backend in self.backends:
+                for r in results:
+                    if isinstance(r.get("result"), dict):
+                        backend.capabilities = r["result"]["capabilities"]
+            self.client.send({"jsonrpc": "2.0", "id": cid,
+                              "result": {"capabilities": caps,
+                                         "serverInfo": {"name": "lspfan"}}})
+            return
+
+        self.client.send({"jsonrpc": "2.0", "id": cid,
+                          "result": merge_results(pending.method, results)})
+
+    def notify_backends(self, msg):
+        for backend in self.live():
+            backend.writer.send(msg)
+
+    # backends -> client
+    def from_backend(self, backend, msg):
+        if "id" in msg and "method" not in msg:
+            cid = str(msg["id"]).rsplit("@", 1)[0]
+            with self.pending_lock:
+                pending = self.pending.get(cid) or self.pending.get(int(cid) if cid.isdigit() else cid)
+            if pending:
+                pending.add(backend.name, msg)
+            return
+
+        if "id" in msg and "method" in msg:
+            self.answer_backend_request(backend, msg)
+            return
+
+        if msg.get("method") == "textDocument/publishDiagnostics":
+            self.publish_diagnostics(backend, msg)
+            return
+
+        self.client.send(msg)
+
+    def answer_backend_request(self, backend, msg):
+        """Answer server-to-client requests here; the client will not."""
+        method = msg["method"]
+        if method == "workspace/configuration":
+            items = (msg.get("params") or {}).get("items") or []
+            result = [{} for _ in items]
+        elif method == "workspace/workspaceFolders":
+            result = None
+        else:
+            result = None  # registerCapability, workDoneProgress/create, and friends
+        log("answered %s for %s" % (method, backend.name))
+        backend.writer.send({"jsonrpc": "2.0", "id": msg["id"], "result": result})
+
+    def publish_diagnostics(self, backend, msg):
+        """Union diagnostics per URI: publishDiagnostics replaces the whole list."""
+        params = msg.get("params") or {}
+        uri = params.get("uri")
+        if not uri:
+            return
+        with self.diag_lock:
+            per_uri = self.diagnostics.setdefault(uri, {})
+            per_uri[backend.name] = params.get("diagnostics") or []
+            merged = [d for name in sorted(per_uri) for d in per_uri[name]]
+        out = dict(params)
+        out["diagnostics"] = merged
+        self.client.send({"jsonrpc": "2.0", "method": "textDocument/publishDiagnostics",
+                          "params": out})
+
+    def run(self):
+        while True:
+            msg = read_message(sys.stdin.buffer)
+            if msg is None:
+                break
+            self.from_client(msg)
+        for backend in self.backends:
+            backend.proc.terminate()
+
+
+def main():
+    commands, args = [], sys.argv[1:]
+    while args:
+        arg = args.pop(0)
+        if arg == "--lsp":
+            commands.append(args.pop(0))
+        elif arg in ("-h", "--help"):
+            print(__doc__)
+            return 0
+        else:
+            print("unknown argument: %s" % arg, file=sys.stderr)
+            return 2
+    if not commands:
+        print("at least one --lsp is required", file=sys.stderr)
+        return 2
+    Proxy(commands).run()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

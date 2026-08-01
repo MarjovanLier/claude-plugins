@@ -1,6 +1,6 @@
 {
   "php": {
-    "command": "lspx",
+    "command": "lspfan",
     "args": [
       "--lsp", "phpantom_lsp --stdio",
       "--lsp", "phpforge lsp",
