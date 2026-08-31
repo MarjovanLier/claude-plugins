@@ -1,7 +1,7 @@
 ---
 name: wiki-checkpoint
-description: Run a wiki and memory checkpoint at the end of a chat thread or before context compaction. Use when the user invokes wiki-checkpoint, asks to save session knowledge, asks for a wiki or memory sweep, or wants durable findings, retrospective lessons, and routing decisions captured from the current conversation. Honour focus text and skip flags such as skip wiki, skip memory, and skip retrospective.
-version: 1.0.1
+description: Use when the user invokes wiki-checkpoint, asks to save session knowledge, asks for a wiki or memory sweep, or wants durable findings, retrospective lessons, and routing decisions captured from the current conversation, typically at the end of a chat thread or before context compaction. Honour focus text and skip flags such as skip wiki, skip memory, and skip retrospective.
+version: 1.1.0
 ---
 
 # Wiki Checkpoint
@@ -68,13 +68,15 @@ Search memory with `rg --no-ignore -n -i -- "<term>" "$MEMORY_DIR"` (fallback `g
 
 ### 3. Retrospective
 
-Unless `skip retrospective` is given, review the session for findings that change future behaviour: mistakes and near misses, rule refinements and corrections, ruled-out paths, and method failures.
+Unless `skip retrospective` is given, review the session for findings that change future behaviour: mistakes and near misses, rule refinements and corrections, ruled-out paths, method failures, and confirmed working methods a future session would otherwise re-derive from scratch.
 
-A finding is valid only if it answers what a future session should do differently. Omit self-praise, diligence notes, and generic lessons; when in doubt, omit.
+A finding is valid only if it answers what a future session should do differently. Omit self-praise, diligence notes, and generic lessons; a confirmed working method qualifies only when it names a repeatable action, not an outcome. When in doubt, omit.
+
+Then run the rule audit: check every memory rule and wiki page the session actually applied or consulted against what happened, whether or not anyone commented on it. A rule the session's own evidence showed to be misleading or obsolete is corrected in place or removed together with its `MEMORY.md` entry; a rule or page whose named file, command, or flag was removed during the session is flagged in the report. The audit covers only rules and pages the session touched, never the whole store. `skip memory` blocks the audit's memory writes, not the audit itself; suppressed corrections appear in the report as not written.
 
 Routing test: changes a future method, route to memory; changes only the stored answer, route to wiki. One event may produce both, but the content must differ (behavioural rule in memory, domain fact in wiki).
 
-Update an existing `feedback_*.md` when one covers the rule; create `feedback_<slug>.md` only when none fits. Corrections supersede old guidance in place, preserving the original failure context.
+Update an existing `feedback_*.md` when one covers the rule; create `feedback_<slug>.md` only when none fits. Corrections supersede old guidance in place, preserving the original failure context: append the new evidence to the **Why:** trail and rewrite only the rule line and **How to apply:**. Never rewrite a rule file from scratch; repeated whole-rule rewriting is how correct rules degrade, and the evidence trail is what keeps a rule correctable later.
 
 ### 4. Write Wiki
 
@@ -134,13 +136,14 @@ Wiki checkpoint complete.
 - Stale pages found but not updated: N (list filenames, reason)
 - Contradictions introduced (intentional): N (list filenames)
 - Retrospective: N findings (A written to memory, B written to wiki, C not written) / none / skipped by argument
+- Rule audit: N rules/pages used this session (A corrected, B removed, C flagged, filenames) / none used / skipped by argument
 - Findings not written: N (finding summary, source step, intended route or file, exactly one reason each)
 - Lint: clean / N issues (list) / not run (reason)
 - Commit: <hash> pushed / <hash> (push failed) / not run (reason) / not a git repository
 - Failures/skipped steps: none / list (what happened, what remains manual)
 ```
 
-Retrospective counting: count routed write-ups, not source events; N = A + B + C, and C matches the retrospective subset of the `Findings not written` line.
+Retrospective counting: count routed write-ups, not source events; N = A + B + C, and C matches the retrospective subset of the `Findings not written` line. The rule audit line counts rules and pages the session used, not findings; `skip retrospective` skips it, and audit corrections suppressed by `skip memory` appear under `Findings not written`.
 
 Every step that failed or was skipped (pull, a blocked write, lint, push) appears under failures with what remains for manual action; reserve that line for operational failures not already represented on another line. Never claim completeness the sweep did not achieve.
 

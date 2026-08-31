@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Context was just compacted. If durable findings, decisions, or retrospective lessons from before compaction have not been checkpointed yet, offer to run /wiki-checkpoint now (do not run it unprompted; writes stay user-gated).'"
+          }
+        ]
+      }
+    ]
+  }
+}

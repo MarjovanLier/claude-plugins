@@ -20,6 +20,10 @@ Claude Code plugin bundling skills for maintaining a Karpathy-style LLM wiki (a 
 /wiki-lint
 ```
 
+## Hooks
+
+A `SessionStart` hook (matcher `compact`) reminds the model to offer `/wiki-checkpoint` right after context compaction, when durable findings from the compacted conversation may not have been swept yet. The checkpoint itself stays user-invoked; the hook only surfaces the offer.
+
 ## Notes
 
 - Search-backed skills use the [qmd](https://github.com/tobi/qmd) MCP server where a collection exists and fall back to filesystem search (`rg`) otherwise.
