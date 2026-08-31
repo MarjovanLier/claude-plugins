@@ -22,7 +22,12 @@ Claude Code plugin bundling skills for maintaining a Karpathy-style LLM wiki (a 
 
 ## Hooks
 
-A `SessionStart` hook (matcher `compact`) reminds the model to offer `/wiki-checkpoint` right after context compaction, when durable findings from the compacted conversation may not have been swept yet. The checkpoint itself stays user-invoked; the hook only surfaces the offer.
+Two hooks make the checkpoint auto-triggerable around context compaction:
+
+- `PreCompact` snapshots the session transcript to `~/.claude/wiki-checkpoint/pending/<session-id>.jsonl`, preserving the full pre-compaction record (one snapshot per session, self-cleaned after 30 days).
+- `SessionStart` (matcher `compact`) instructs the model to run `/wiki-checkpoint` at the first natural stopping point after compaction, scanning the snapshot (or transcript) rather than only the compacted summary, and to delete the snapshot once consumed.
+
+Consolidation stays gated at compaction boundaries; nothing fires per turn.
 
 ## Notes
 

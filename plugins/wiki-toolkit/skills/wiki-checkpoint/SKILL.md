@@ -1,7 +1,7 @@
 ---
 name: wiki-checkpoint
 description: Use when the user invokes wiki-checkpoint, asks to save session knowledge, asks for a wiki or memory sweep, or wants durable findings, retrospective lessons, and routing decisions captured from the current conversation, typically at the end of a chat thread or before context compaction. Honour focus text and skip flags such as skip wiki, skip memory, and skip retrospective.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Wiki Checkpoint
@@ -47,6 +47,8 @@ When `WIKI_DIR` is inside a git repository, run `git -C "$WIKI_DIR" status` befo
 ## Workflow
 
 ### 1. Scan the Conversation
+
+When the checkpoint is auto-triggered after compaction (hook-injected context names a pre-compaction snapshot or transcript path), scan that full record rather than only the compacted summary; it is the evidence base for captures and citations. Delete the consumed snapshot file once the sweep completes. An auto-triggered run carries the same write authorisation as a user invocation; the standing hook instruction is the user direction.
 
 Scan the current conversation for new or updated durable information:
 
