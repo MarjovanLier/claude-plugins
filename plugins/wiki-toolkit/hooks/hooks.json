@@ -19,6 +19,15 @@
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/postcompact-instruct.sh\""
           }
         ]
+      },
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/pending-checkpoint-notice.sh\""
+          }
+        ]
       }
     ]
   }
