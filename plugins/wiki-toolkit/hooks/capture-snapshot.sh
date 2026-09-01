@@ -13,7 +13,7 @@ cwd=$(json_field cwd)
 # (WC-50): transcripts 30 days, stale temp files 1 day, watermarks 180 days.
 find "$BASE/pending" "$BASE/blocked" -name '*.jsonl' -mtime +30 -delete 2>/dev/null
 find "$BASE/pending" -name '.*.tmp' -mtime +1 -delete 2>/dev/null
-find "$BASE/consumed" -type f -mtime +180 -delete 2>/dev/null
+find "$BASE/consumed" "$BASE/nudged" -type f -mtime +180 -delete 2>/dev/null
 
 [ -n "$tp" ] && [ -f "$tp" ] || exit 0
 
