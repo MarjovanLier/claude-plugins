@@ -1,7 +1,7 @@
 ---
 name: wiki-checkpoint
 description: Use when the user invokes wiki-checkpoint, asks to save session knowledge, asks for a wiki or memory sweep, or wants durable findings, retrospective lessons, and routing decisions captured from the current conversation, typically at the end of a chat thread or before context compaction. Honour focus text and skip flags such as skip wiki, skip memory, and skip retrospective.
-version: 1.4.0
+version: 1.5.0
 ---
 
 # Wiki Checkpoint
@@ -88,6 +88,8 @@ Then run the rule audit: check every memory rule and wiki page the session actua
 
 Triggerability: when a relevant rule or page was applied only after a failed or delayed route, or Step 2 surfaces overlapping coverage the session should have consulted, compare the initiating request with that item's `MEMORY.md` line or index entry; when the line omitted the demonstrated trigger or discriminator, sharpen it under the applicable write guards. Limited to items the session or Step 2 actually surfaced; never a store-wide index rewrite.
 
+Skill candidates: while auditing, flag items that have outgrown their container as promotion candidates: a memory feedback rule whose **Why:** trail carries three or more dated applications, or a wiki method page the session followed as a multi-step procedure too large for a one-paragraph rule. Candidates appear on the report's `Skill candidates` line and nowhere else: the sweep never creates or modifies skill files; compiling a candidate into a Claude Code skill is a separate act the user directs.
+
 Routing test: changes a future method, route to memory; changes only the stored answer, route to wiki. One event may produce both, but the content must differ (behavioural rule in memory, domain fact in wiki).
 
 Update an existing `feedback_*.md` when one covers the rule; create `feedback_<slug>.md` only when none fits. Corrections supersede old guidance in place, preserving the original failure context: append the new evidence to the **Why:** trail as a dated bullet (convert a prose trail to bullets only when touched, preserving every word) and rewrite only the rule line and **How to apply:**. Never rewrite a rule file from scratch; repeated whole-rule rewriting is how correct rules degrade, and the evidence trail is what keeps a rule correctable later.
@@ -156,6 +158,7 @@ Wiki checkpoint complete.
 - Contradictions introduced (intentional): N (list filenames)
 - Retrospective: N findings (A written to memory, B written to wiki, C not written) / none / skipped by argument
 - Rule audit: N rules/pages used this session (A corrected, B removed, C flagged, filenames) / none used / skipped by argument
+- Skill candidates: N (rule or page name, evidence) / none / skipped by argument
 - Findings not written: N (finding summary, source step, intended route or file, exactly one reason each)
 - Lint: clean / N issues (list) / not run (reason)
 - Commit: <hash> pushed / <hash> (push failed) / not run (reason) / not a git repository
@@ -164,7 +167,7 @@ Wiki checkpoint complete.
 - Failures/skipped steps: none / list (what happened, what remains manual)
 ```
 
-Retrospective counting: count routed write-ups, not source events; N = A + B + C, and C matches the retrospective subset of the `Findings not written` line. The rule audit line counts rules and pages the session used, not findings; `skip retrospective` skips it, and audit corrections suppressed by `skip memory` appear under `Findings not written`.
+Retrospective counting: count routed write-ups, not source events; N = A + B + C, and C matches the retrospective subset of the `Findings not written` line. The rule audit line counts rules and pages the session used, not findings; `skip retrospective` skips it, and audit corrections suppressed by `skip memory` appear under `Findings not written`. The `Skill candidates` line follows the rule audit: report-only, skipped when the audit is skipped, and never a not-written entry, because no write was ever due.
 
 Every step that failed or was skipped (pull, a blocked write, lint, push) appears under failures with what remains for manual action; reserve that line for operational failures not already represented on another line. Never claim completeness the sweep did not achieve.
 
