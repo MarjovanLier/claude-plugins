@@ -21,7 +21,7 @@ blocked=$(find "$BASE/blocked/$scope" -name '*.jsonl' 2>/dev/null | wc -l | tr -
 [ "${blocked:-0}" -gt 0 ] && printf '%s checkpoint snapshot(s) for this project are blocked awaiting user intervention (see %s); mention this once, do not auto-run them.\n' "$blocked" "$BASE/blocked/$scope"
 
 legacy=$(find "$BASE/pending" -maxdepth 1 -name '*.jsonl' 2>/dev/null | wc -l | tr -d ' ')
-[ "${legacy:-0}" -gt 0 ] && printf '%s legacy unscoped snapshot(s) sit in %s; their project cannot be inferred from the filename, so they need manual review, never an automatic sweep into this project.\n' "$legacy" "$BASE/pending"
+[ "${legacy:-0}" -gt 0 ] && printf '%s legacy unscoped snapshot(s) sit in %s; their project cannot be inferred from the filename. Tell the user they need manual review; never sweep them automatically into this project.\n' "$legacy" "$BASE/pending"
 
 foreign=$(find "$BASE/pending" -mindepth 2 -name '*.jsonl' -not -path "$BASE/pending/$scope/*" 2>/dev/null | wc -l | tr -d ' ')
 [ "${foreign:-0}" -gt 0 ] && printf 'Informational: %s pending snapshot(s) belong to other projects and will be offered there.\n' "$foreign"
