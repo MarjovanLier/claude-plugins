@@ -1,6 +1,6 @@
 {
   "name": "php-lspx",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "PHP language server: intelephense, phpactor, phpantom-lsp, and phpforge fanned out via the bundled lspfan multiplexer for completion, diagnostics, and refactoring.",
   "author": {
     "name": "Marjo van Lier",

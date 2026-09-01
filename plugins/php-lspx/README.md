@@ -97,7 +97,7 @@ cargo install --path /path/to/phpforge
 
 Server order no longer matters, unlike under lspx where the last-listed server's reply could replace the others on completion and hover.
 
-> Note: phpactor's phpcs provider fails when `vendor/bin/phpcs` is absent, returning output it cannot parse and exiting 255. lspfan drops the server for that request rather than dying, but the code action is lost, so disable the provider in `~/.config/phpactor/phpactor.json` with `"php_code_sniffer.enabled": false`. phpactor reads only that global file; a project-level `.phpactor.json` is ignored.
+> Note: phpactor's phpcs provider defaults `php_code_sniffer.bin` to `%project_root%/vendor/bin/phpcs`. In a project without that binary it returns output phpactor cannot parse and exits 255, costing you every phpactor code action for that request. lspfan treats it as an abstention and keeps serving the other servers; lspx died on it, taking the whole chain down. Fix it by pointing `php_code_sniffer.bin` at a phpcs that exists, or disable the provider with `"php_code_sniffer.enabled": false`. Note that phpcs ships no PER ruleset, so on a PER-CS codebase php-cs-fixer with `@PER-CS3x0` is the better style checker. Either way the setting belongs in `~/.config/phpactor/phpactor.json`: phpactor reads only that global file, and a project-level `.phpactor.json` is ignored.
 
 > Note: results appear once per answering server, so a class shows up in `documentSymbol` as many times as there are servers that implement it. That is inherent to fanning out.
 
