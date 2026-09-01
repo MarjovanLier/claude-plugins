@@ -22,12 +22,13 @@ Claude Code plugin bundling skills for maintaining a Karpathy-style LLM wiki (a 
 
 ## Hooks
 
-Two hooks make the checkpoint auto-triggerable around context compaction:
+The hooks capture; the checkpoint consumes. Snapshots are project-scoped (`pending/<scope>/<session-id>.jsonl` under `~/.claude/wiki-checkpoint/`, scope = project-root slug plus path checksum) so one project's transcript is never swept into another project's wiki or memory.
 
-- `PreCompact` snapshots the session transcript to `~/.claude/wiki-checkpoint/pending/<session-id>.jsonl`, preserving the full pre-compaction record (one snapshot per session, self-cleaned after 30 days).
-- `SessionStart` (matcher `compact`) instructs the model to run `/wiki-checkpoint` at the first natural stopping point after compaction, scanning the snapshot (or transcript) rather than only the compacted summary, and to delete the snapshot once consumed.
+- `PreCompact` and `SessionEnd` both run `capture-snapshot.sh`: an atomic, owner-only full transcript copy. PreCompact captures every non-empty unconsumed suffix; SessionEnd creates a new candidate only when the unconsumed delta clears a noise floor (`WIKI_CHECKPOINT_FLOOR`, default 32KB) but refreshes an existing pending snapshot floor-free whenever the transcript grew. Short non-compacting sessions below the floor stay uncovered by design.
+- `SessionStart` (matcher `compact`) instructs the model to run `/wiki-checkpoint` at the first natural stopping point, scanning the snapshot (or transcript) rather than only the compacted summary, starting after the session's consumed byte watermark.
+- `SessionStart` (matcher `startup|resume`) flags this project's unconsumed snapshots older than an hour; blocked, legacy-unscoped, and foreign-project snapshots are reported informationally, never auto-swept.
 
-Consolidation stays gated at compaction boundaries; nothing fires per turn.
+The checkpoint records a consumed byte watermark per session (`consumed/<scope>/<session-id>`, kept 180 days) and disposes of each snapshot: consumed (deleted), retained pending (transient failure, auto-retried), or moved to `blocked/` (needs user intervention, never auto-run). Snapshots self-clean after 30 days. Consolidation stays gated at episode boundaries (compaction, session end); nothing fires per turn.
 
 ## Notes
 

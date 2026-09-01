@@ -1,7 +1,7 @@
 ---
 name: wiki-ingest
 description: Ingest one explicitly identified input into the wiki as a single transaction. A URL, file, pasted text, command output, stated fact, or an investigation result from the current session. Use when the user asks to add a specific input or finding to the wiki, says "wiki this" or "ingest this into the wiki", or asks to record a conclusion, decision, or finding permanently. Generic "ingest this" or "file this" without wiki context is not this skill. Not for behavioural rules or memory updates, not for end-of-thread or pre-compaction knowledge sweeps (use wiki-checkpoint), and not for wiki health checks (use wiki-lint).
-version: 1.0.1
+version: 1.1.0
 ---
 
 # Wiki Ingest
@@ -14,7 +14,7 @@ Authority: the destination wiki's `SCHEMA.md`. This file is the procedure; on an
 
 Project root: the workspace root the harness reports; otherwise the nearest ancestor of the working directory containing `.git`, `CLAUDE.md`, or `AGENTS.md`; otherwise the working directory itself.
 
-Same cascade as the checkpoint: `<project root>/wiki/` when it exists, otherwise `~/wiki/`. Neither exists: report `not written: no wiki found` and stop. No other directory (`docs/`, `.wiki/`, `notes/`, `handbook/`) counts.
+Same cascade as the checkpoint: `<project root>/wiki/` when it exists, otherwise `~/wiki/`. A destination the user has barred ("do not use my global wiki") is skipped in the cascade: no synchronising reads, no writes; when no permitted destination remains, report `not written: destination barred by the user` and stop. Neither exists: report `not written: no wiki found` and stop. No other directory (`docs/`, `.wiki/`, `notes/`, `handbook/`) counts.
 
 - Project wiki: read its `SCHEMA.md` when present, otherwise sniff the layout. Its conventions govern; never impose global-wiki conventions. Invoking this skill authorises non-destructive writes of this input only; destructive rewriting is forbidden without exception, and no confirmation overrides that ban. When write scope is unclear, report `not written: write scope unclear`.
 - Global wiki as fallback: project-scoped facts go under `pages/<project>/` (the schema's routing exception). Before routing there, check each project-root `CLAUDE.md`, `AGENTS.md`, and `README`: if one references an external knowledge system (Confluence, Notion, Linear, Jira), report `not written: external knowledge system, manual filing required`.
@@ -22,7 +22,7 @@ Same cascade as the checkpoint: `<project root>/wiki/` when it exists, otherwise
 ## Git safety
 
 - Global destination: synchronise before reading its schema or pages, with `git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only`. `--ff-only` refuses an unintended merge or rebase commit; `core.hooksPath=/dev/null` keeps hooks out, because git runs the `post-merge` hook even on a fast-forward pull and a wiki-linting hook would dirty the tree mid-transaction. Attempt this only when `~/wiki` is a git repository with a usable upstream: a plain directory or a remote-less repository is a normal setup, so note it and continue rather than blocking. A pull that ran and failed blocks all writes; report `not written: global wiki pull failed`.
-- Any git-repo destination: before the first write, determine every file the ingest will touch (raw capture, pages, index, log) and run `git status`. If any of them already carries uncommitted changes, the whole transaction is blocked before the first write: report `not written: blocked by pre-existing local changes` and name the dirty files. Never sweep pre-existing uncommitted changes into the ingest commit.
+- Any git-repo destination: before the first write, determine every file the ingest will touch (raw capture, pages, index, log) and run `git status`. If any of them already carries uncommitted changes, the whole transaction is blocked before the first write: report `not written: blocked by pre-existing local changes` and name the dirty files. Never sweep pre-existing uncommitted changes into the ingest commit. Exception: when only `index.md` or `log.md` is dirty and the page targets themselves are clean, this explicit user instruction authorises the page write plus a non-destructive append to those files; make no commit, and report that the user owns the combined dirty state and the commit. The exception never extends to editing a dirty substantive page.
 
 ## Workflow
 
@@ -73,7 +73,7 @@ Only after the ingest made wiki writes: the destination's own lint script when p
 
 ### 6. Commit and push
 
-When the ingest made writes: exactly one commit, path-limited to the files this ingest touched; no writes means no commit, reported as not run with the reason. Global wiki: conventional format, signed off, push after commit; a failed push is reported with the local commit hash. Project wikis: the project's commit conventions, no push mandate. Never leave a half-applied ingest behind; a rollback undoes only the files this ingest wrote and never restores, cleans, or discards pre-existing changes.
+When the ingest made writes: exactly one commit, path-limited to the files this ingest touched (except the dirty index/log exception above, which makes no commit); no writes means no commit, reported as not run with the reason. Global wiki: conventional format, signed off, push after commit. A push rejected because upstream advanced after the opening pull is recovered once with `git -c core.hooksPath=/dev/null -C ~/wiki pull --rebase` then a second push; a conflicting rebase is aborted (`git -C ~/wiki rebase --abort`) and reported for manual resolution. Any other failed push is reported with the local commit hash. Project wikis: the project's commit conventions, no push mandate. Never leave a half-applied ingest behind; a rollback undoes only the files this ingest wrote and never restores, cleans, or discards pre-existing changes.
 
 ### 7. Report
 
@@ -93,7 +93,7 @@ Wiki ingest: complete / paused (awaiting confirmation) / not written.
 - Failures/manual action: none / list
 ```
 
-A paused report shows the state so far (no writes have happened yet) and the pending question. Not-written reasons, first applicable: no wiki found; global wiki pull failed; input unavailable or unreadable; blocked by pre-existing local changes; write scope unclear; external knowledge system, manual filing required.
+A paused report shows the state so far (no writes have happened yet) and the pending question. Not-written reasons, first applicable: destination barred by the user; no wiki found; global wiki pull failed; input unavailable or unreadable; blocked by pre-existing local changes; write scope unclear; external knowledge system, manual filing required. A destination the user has closed ("do not use my global wiki") is barred, not scope-unclear.
 
 ## Invariants
 

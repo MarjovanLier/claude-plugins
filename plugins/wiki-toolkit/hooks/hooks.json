@@ -5,7 +5,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/precompact-snapshot.sh\""
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/capture-snapshot.sh\" precompact"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/capture-snapshot.sh\" session-end"
           }
         ]
       }
