@@ -76,6 +76,10 @@ should be `snapshot`, and markdownlint via the committed config. It finishes by
 running `qmd update` and `qmd embed` to refresh the search index, so the pages
 become searchable as part of the same run.
 
+If the qmd output warns about orphaned embedding chunks (qmd hints when they
+exceed 10% of vectors), run `qmd cleanup` and record the result in the report.
+Do not run cleanup when no hint appears; it vacuums the whole index.
+
 Exit codes: `0` clean, `1` warnings present, `2` errors present. The qmd index is
 stored under `~/.config/qmd/`, not in the repo, so re-indexing never produces git
 changes.
@@ -109,6 +113,7 @@ Wiki lint: <WIKI_DIR>
 - Pages: N | Errors: N | Warnings: N
 - Fixed: <list, or "nothing to fix">
 - Index: refreshed (qmd: N new, N updated) / not run (qmd not installed)
+- Cleanup: N orphaned chunks removed (only when the qmd hint fired)
 - Remaining: <pre-existing items left, with reason> / clean
 ```
 
