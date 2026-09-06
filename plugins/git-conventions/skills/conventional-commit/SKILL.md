@@ -2,7 +2,7 @@
 name: conventional-commit
 description: Create and validate commit messages following the Conventional Commits standard. Use when committing code, reviewing commit messages, converting existing commits to conventional format, or when someone asks about commit message formatting. Also use proactively when preparing commits to ensure compliance, and when a commit linter (commitlint or a commit-msg hook) rejects a commit message and the last commit needs correcting and amending.
 argument-hint: "[create|validate|convert|fix] [optional message, branch, or linter output]"
-version: 1.0.1
+version: 1.0.2
 ---
 
 # Conventional Commits
@@ -94,9 +94,10 @@ When `/conventional-commit create` is invoked:
 4. Check `README.md` at the repository root for defined scopes. IF scopes are defined, use the matching one. IF scope is marked required, never omit it. IF no scopes are defined, include a scope only when the impact area is obvious.
 5. Write the description: sentence case, imperative mood, no trailing full stop, 10 to 50 characters.
 6. Write the body (required): explain why the change is being made, with every line wrapped at 72 characters.
-7. Append any trailers the repository's hooks or rules require (for example `Signed-off-by: Name <email>`).
-8. Commit with `git commit -F -`, passing the full message on standard input. Never pass a multi-line message with `-m`. Standard input avoids shell quoting problems, preserves the pre-wrapped body, and leaves no shared temporary file for a concurrent session to clobber. If a file is genuinely needed, use a uniquely named one in the session scratchpad directory and remove it afterwards.
-9. Verify with `git show --stat HEAD` that only the intended files were committed.
+7. Append any trailers the repository's hooks or rules require other than the sign-off (for example a `Claude-Session:` line) as the last lines of the message. Never type `Signed-off-by`; step 9 has git write it, and it must be the final line.
+8. Measure the message, never eyeball it: pipe the same text through `awk 'NR==1{sub(/^[^:]*: /,""); if(length>50)print "subject "length} NR>1&&length>72{print NR": "length}'`. Anything it prints is rewrapped or shortened before committing.
+9. Commit with `git commit -s -F -`, passing the full message on standard input. `-s` appends `Signed-off-by` from the repository's configured `user.name` and `user.email`, after every trailer in the message. Never pass a multi-line message with `-m`. Standard input avoids shell quoting problems, preserves the pre-wrapped body, and leaves no shared temporary file for a concurrent session to clobber. If a file is genuinely needed, use a uniquely named one in the session scratchpad directory and remove it afterwards.
+10. Verify with `git show --stat HEAD` that only the intended files were committed. Push in a separate step, after the commit hook has had its say.
 
 When `/conventional-commit validate` is invoked:
 1. Run `git log --format="%h %s" -20`, or limit to the range named in the provided arguments.
@@ -136,15 +137,15 @@ One caveat for Branch A: if the rejected attempt used `git commit -a` or a paths
 
 **Branch A: the commit was rejected and never created** (a `commit-msg` or `pre-commit` hook failed, and `HEAD` is an older commit unrelated to the staged work). This is the common case.
 1. Collect the linter output from the arguments or the conversation.
-2. Rewrite the message so every reported violation is corrected. Keep the type and scope accurate to the staged change, wrap body lines at 72 characters, and add any required trailers.
-3. Re-run the original commit: `git commit -F -` with the corrected message on standard input. Never amend.
+2. Rewrite the message so every reported violation is corrected. Keep the type and scope accurate to the staged change, wrap body lines at 72 characters, add any required trailers other than the sign-off, and measure it with the awk line from create step 8.
+3. Re-run the original commit: `git commit -s -F -` with the corrected message on standard input. Never amend.
 4. The hook re-runs. If it rejects again, read the new output and repeat from step 2.
 
 **Branch B: a commit exists and its message is wrong** (CI commitlint flagged an existing commit, or the user names the `HEAD` commit explicitly).
 1. Confirm with the user which commit is being corrected before touching it. Do not infer it from a hook failure.
 2. Read the current message with `git log -1 --format=%B` and rewrite it as in Branch A step 2.
 3. Publication check before amending: run `git fetch --all --quiet` (skip if offline, and say so), then `git branch -r --contains HEAD` and `git tag --contains HEAD`. If the commit is reachable from any remote ref or tag, STOP: report that amending would require a force-push and show the corrected message instead. If the fetch failed, STOP as well, because a blank result after a failed fetch proves nothing. A branch with no upstream is NOT a reason to stop: never having been pushed is precisely what makes amending safe.
-4. Amend the message only: `git commit --amend --only -F -` with the corrected message on standard input. `--only` keeps the current index out of the commit, so unrelated staged work is not swept in. Piping via standard input avoids both shell quoting problems and a shared temporary file.
+4. Amend the message only: `git commit --amend --only -s -F -` with the corrected message (measured as in create step 8, sign-off left out) on standard input. `--only` keeps the current index out of the commit, so unrelated staged work is not swept in; `-s` keeps the sign-off last and does not duplicate one already there. Piping via standard input avoids both shell quoting problems and a shared temporary file.
 5. Verify with `git show --stat HEAD` that the message changed and the file list did not.
 
 When invoked without arguments or with just a message:
