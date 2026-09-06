@@ -94,7 +94,7 @@ Skill candidates: while auditing, flag items that have outgrown their container 
 cd ~/.claude/projects && grep -rh '^  skill:' ./*/memory/feedback_*.md | sort | uniq -c | sort -rn
 ```
 
-Candidates appear on the report's `Skill candidates` line and nowhere else, naming the skill and the rule filenames. The sweep never creates or modifies skill files; compiling a candidate is a separate act the user directs, normally through the skill-review skill.
+A rule whose **Why:** trail already carries a `compiled into` bullet is not re-reported under the three-applications criterion unless a dated application follows that bullet. Candidates appear on the report's `Skill candidates` line and nowhere else, naming the skill and the rule filenames. The sweep never creates or modifies skill files; compiling a candidate is a separate act the user directs, normally through the skill-review skill.
 
 Routing test: changes a future method, route to memory; changes only the stored answer, route to wiki. One event may produce both, but the content must differ (behavioural rule in memory, domain fact in wiki).
 
@@ -144,7 +144,7 @@ Fix every error or warning on files the sweep touched, pre-existing or not; repo
 
 ### 7. Commit and Push
 
-Global wiki: whenever the checkpoint made writes, make one batched commit path-limited to the files it changed (conventional format, signed-off), then push. A push rejected because upstream advanced after the opening pull is recovered once: `git -c core.hooksPath=/dev/null -C ~/wiki pull --rebase`, then push again and report the final result; if the rebase conflicts, `git -C ~/wiki rebase --abort` and report manual resolution. Only a non-fast-forward rejection gets this recovery; any other failed push is reported with the local commit hash.
+Global wiki: whenever the checkpoint made writes, make one batched commit path-limited to the files it changed (conventional format, signed-off), then push. Before staging each file, confirm with `git diff -- <path>` that every hunk is this sweep's own: a live peer session can share the working tree, and a path-limited add stages the whole file as it sits on disk, so a foreign hunk makes the file a pre-existing local change and its finding is reported as blocked. A push rejected because upstream advanced after the opening pull is recovered once. First `git fetch` and check whether the remote already holds the local commit; a peer on the same tree may have rebased and pushed it, in which case the rejection reads `cannot lock ref` and nothing remains to push. Otherwise `git -c core.hooksPath=/dev/null -C ~/wiki pull --rebase`, then push again and report the final result; if the rebase conflicts, `git -C ~/wiki rebase --abort` and report manual resolution. Only a non-fast-forward rejection gets this recovery; any other failed push is reported with the local commit hash.
 
 Lint does not gate the commit. Only a lint error the sweep itself introduced blocks it, and then the fix is to correct that error and commit. A lint that could not run (no compatible runner) must never leave the writes uncommitted: doing so strands them in the working tree, where the dirty-tree guard above then blocks every later checkpoint against the same wiki.
 
