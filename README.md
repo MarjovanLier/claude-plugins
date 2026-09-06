@@ -9,7 +9,7 @@ A collection of plugins for Claude Code CLI.
 | [git-conventions](./plugins/git-conventions) | Git workflow skills: Conventional Commit messages and MR/PR contribution descriptions |
 | [wiki-toolkit](./plugins/wiki-toolkit) | Skills for maintaining a Karpathy-style LLM wiki: ingest, lookup, checkpoint, lint |
 | [funzies](./plugins/funzies) | Fun thinking-style skills and an agent: first-principles, YAGNI, sequential thinking, and What Would Elon Do analysis |
-| [php-lspx](./plugins/php-lspx) | PHP language server: intelephense and phpactor multiplexed via lspx |
+| [php-lspx](./plugins/php-lspx) | PHP language server: intelephense, phpactor, phpantom-lsp and phpforge fanned out via the bundled lspfan multiplexer |
 | [php-code-simplifier](./plugins/php-code-simplifier) | Agent that simplifies and refines PHP code for clarity and maintainability |
 
 ## Installation

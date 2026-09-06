@@ -16,7 +16,7 @@ claude --plugin-dir ./plugins/plugin-name
 /help
 
 # Install from marketplace
-/plugin install plugin-name@MarjovanLier/claude-plugins
+/plugin install plugin-name@marjo-claude-plugins
 ```
 
 ## Architecture
@@ -58,12 +58,11 @@ version: 1.0.0
 ---
 ```
 
-**Agents** include examples for invocation:
+**Agents** state when to use them in the description and keep the body to instructions:
 ```yaml
 ---
 name: agent-name
-description: Use when...
-<example>Context/user/assistant/commentary</example>
+description: Use when... Not for...
 model: sonnet
 color: cyan
 tools: ["Read"]

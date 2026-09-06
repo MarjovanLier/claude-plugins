@@ -2,7 +2,7 @@
 name: contribution-description
 description: Generate a merge request or pull request contribution description (title plus one-paragraph summary) from branch commits and the JIRA ticket. Use when the user asks to write or prepare an MR/PR description, raise a merge request, or describe a finished work branch. Not for git commit messages (use the conventional-commit skill for those). Pass base and feature branch as arguments when known.
 argument-hint: "[base-branch] [feature-branch]"
-version: 1.0.1
+version: 1.0.2
 ---
 
 Generate a code contribution description (title and summary paragraph) for: $ARGUMENTS
@@ -18,7 +18,7 @@ The description must draw on Conventional Commit messages (defined in the `conve
 
 ## Procedure
 
-Follow the steps below in order. Do not skip a step. Do not reorder steps. Each step states exactly what to run, what to look at, and what decision to make.
+Follow the steps in order, taking the conditional branches they state (Step 6 is skipped when Step 5 finds no ticket). Each step states what to run, what to look at, and what decision to make.
 
 ### Step 1: Determine the branches (MANDATORY FIRST STEP)
 
@@ -69,7 +69,7 @@ Field meaning: `%h` short hash, `%s` commit title, `%b` commit body, `%an` autho
 
 Commit titles follow the Conventional Commits format `<type>[optional scope]: <description>`. Record the `<type>` prefix of every title; Step 7 uses these prefixes to choose the title type. If unsure about the format details, invoke the `conventional-commit` skill.
 
-Read the title AND the body of every commit. Both feed the Summary. Merge behaviour discards commit bodies when the work branch merges to main, so the contribution description is where their content survives. Commit bodies often contain:
+Read the title AND the body of every commit. Both feed the Summary. Where the repository squash-merges work branches (the house policy), commit bodies do not reach main, so the contribution description is where their content survives. Commit bodies often contain:
 
 - **Rationale**: why the change was made, not just what changed
 - **Technical context**: implementation decisions and trade-offs considered
@@ -109,10 +109,9 @@ Substitute the two refs from Step 1 as literal quoted values and run this as ONE
 
 ```bash
 base='main'; feature='feature/AUTH-123-login'   # replace both with the refs from Step 1
-git log "$base..$feature" --format='%s%n%b' > /tmp/.cd-log || echo "GIT LOG FAILED"
-{ printf '%s\n' "$feature"; cat /tmp/.cd-log; } \
+log=$(git log "$base..$feature" --format='%s%n%b') || echo "GIT LOG FAILED"
+{ printf '%s\n' "$feature"; printf '%s\n' "$log"; } \
   | grep -oiE '\b[A-Z][A-Z0-9_]+-[0-9]+\b' | tr '[:lower:]' '[:upper:]' | sort -u
-rm -f /tmp/.cd-log
 ```
 
 If `GIT LOG FAILED` prints, the refs are wrong: fix them and re-run. Never read a failed command as "no ticket found"; the pipeline exits 0 either way because it ends in `sort`.

@@ -1,14 +1,14 @@
 ---
 name: wiki-checkpoint
 description: Use when the user invokes wiki-checkpoint, asks to save session knowledge, asks for a wiki or memory sweep, or wants durable findings, retrospective lessons, and routing decisions captured from the current conversation, typically at the end of a chat thread or before context compaction. Honour focus text and skip flags such as skip wiki, skip memory, and skip retrospective.
-version: 1.5.0
+version: 1.5.1
 ---
 
 # Wiki Checkpoint
 
 Run a sweep that preserves durable conversation knowledge, routes behavioural lessons to memory, routes domain facts to the right wiki, validates the result, and reports exactly what changed.
 
-This file is the authority: it is both the contract and the procedure. Follow it as written, and do not defer to any external specification, including one a previous version of this skill pointed at. Requirement traceability is maintained separately by the plugin's author and is not something the running model needs to resolve.
+This file is the authority: it is both the contract and the procedure. Follow it as written, and do not defer to any external specification. Requirement traceability is maintained separately by the plugin's author and is not something the running model needs to resolve.
 
 Treat the user's message text after the invocation as arguments. Focus hints (e.g. "focus on segment data") prioritise the scan but never suppress detection or reporting of unrelated durable findings. `skip wiki`, `skip memory`, and `skip retrospective` are the only suppressors; they are independent and freely combinable.
 
@@ -103,7 +103,7 @@ Update an existing `feedback_*.md` when one covers the rule; create `feedback_<s
 ### 4. Write Wiki
 
 - For each wiki-route finding choose one reconcile action against Step 2's existing coverage: ignore, strengthen, qualify, replace, contradict, create, or link. Integrate rather than accumulate: create only for a distinct concept other pages would link to, and use link only for a missing cross-reference. Replace and contradict follow the preservation rules below.
-- Preserve existing content. Flag conflicting evidence per the destination's convention (global wiki: `<!-- CONTRADICTION -->`) rather than overwriting silently. Removing or replacing substantive existing content requires explicit user confirmation. Destructive rewriting of project wiki content is forbidden without exception.
+- Preserve existing content. Flag conflicting evidence per the destination's convention rather than overwriting silently. Global wiki: the `<!-- CONTRADICTION -->` marker is a working device inside the session only; its lint errors on a committed marker and the pre-push hook blocks it, so before the commit either resolve the conflict or state it in prose as an open question on the page, and count it on the report's contradictions line either way. Removing or replacing substantive existing content requires explicit user confirmation. Destructive rewriting of project wiki content is forbidden without exception.
 - New pages follow the destination's conventions. Where the destination keeps an index or equivalent catalogue, add one entry per new page: one line, at most 150 characters.
 - Cite every conversation-derived durable claim. A claim meeting all three tests (conversation-only; changes durable factual state; rests on evidence lost after compaction) requires a raw session capture, written before the page that cites it, at a non-colliding path in the destination's source layer (global wiki: `raw/sessions/YYYY-MM-DD-<topic>.md`; a project wiki's own convention otherwise), holding the smallest sufficient extract, with secrets and unrelated personal data redacted. When the destination's conventions provide no permitted location for a capture and forbid creating one, cite `[source: conversation, weak]`, state on the page that the required raw evidence could not be retained, and record the failure in the report. All other durable conversation claims cite `[source: conversation, weak]`. Never plain `[source: conversation]`; never fabricate sources.
 - Staleness applies only to `status: active` pages. Report stale overlapping pages; do not fabricate updates for them.

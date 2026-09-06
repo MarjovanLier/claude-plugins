@@ -1,7 +1,7 @@
 ---
 name: wiki-lookup
 description: Answer a question from existing knowledge in the user's Karpathy-style wikis, qmd-backed where a collection exists. Never writes, edits, or commits wiki content; the one exception is that a failed lookup against the global wiki may fast-forward it and refresh the search index before concluding absence. Use whenever the user asks what the wiki knows or says about something, whether a topic was researched or decided before, says "look this up in the wiki", "check the wiki", "have we covered this", or asks "what do we know about X" in the sense of accumulated past project, personal, case, setup, or cross-project knowledge. Do not use for ordinary questions about the current codebase, repository documentation, live system state, or general knowledge. Not for adding knowledge (wiki-ingest), end-of-thread sweeps (wiki-checkpoint), or wiki health, sync, and index maintenance (wiki-lint).
-version: 1.1.0
+version: 1.1.1
 ---
 
 # Wiki Lookup
@@ -25,7 +25,7 @@ Map each selected wiki to a qmd collection by absolute path via `mcp__qmd__statu
 
 ## Search: map first, bodies last
 
-1. Read the section headings of the destination's `index.md` or equivalent catalogue (`grep -n "^## " index.md`) and scan the whole section covering the question's domain: it is one screen and never lags, since updating it is part of every ingest. Treat untracked `.md` files the wiki's `git status` shows as part of the wiki.
+1. Read the section headings of the destination's `index.md` or equivalent catalogue (`grep -n "^## " index.md`) and scan the whole section covering the question's domain; updating it is part of every ingest, though the lint's orphan check exists because pages do slip past it. Treat untracked `.md` files the wiki's `git status` shows as part of the wiki.
 2. For destinations with a qmd collection: one `mcp__qmd__query` call, explicitly scoped via `collections` to the selected collection names (omitting it searches every collection) and always with `intent`. Sub-queries: `lex` for exact terms from the question and known aliases (names, IDs, error strings), `vec` for the question's meaning, `hyde` (a short hypothetical answer passage, roughly 50 to 100 words) when the vocabulary or likely answer is unclear. An unknown proper noun, label, or identifier goes into its own `lex` sub-query on its own first; topic words added to it dilute the one distinctive token.
 3. `rg -n -i` over the destination's page directories for concrete identifiers qmd may rank poorly (dates, codes, file paths), and as the recovery when a page written earlier this session is not yet indexed.
 4. Destinations without a collection: add a separate synonym/paraphrase text search; exact terms alone miss reworded overlap.
@@ -48,4 +48,4 @@ When the selected destination is `~/wiki/` and the complete initial search finds
 
 1. `git -C ~/wiki status --porcelain` must be empty; then `git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only` (hook suppression keeps the recovery deterministic; the post-merge hook would otherwise run a full lint).
 2. Dirty checkout, no usable upstream, diverged history, or a failed pull: do not stash, merge, rebase, or reset. State that remote freshness could not be verified and answer from the unchanged local state.
-3. If the pull advanced `HEAD`: run `qmd update && qmd embed` (`update` has no working collection filter in qmd 2.5.3, so this refreshes every configured collection), then search again through qmd and `rg` before concluding absence.
+3. If the pull advanced `HEAD`: run `qmd update && qmd embed` (`update` has no collection filter, so this refreshes every configured collection), then search again through qmd and `rg` before concluding absence.

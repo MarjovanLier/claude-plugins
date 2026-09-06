@@ -2,7 +2,7 @@
 name: yagni
 description: "Apply YAGNI (You Aren't Gonna Need It) to a feature, plan, design, or diff: classify each element as needed now or speculative, and cut the speculation. Use when someone says 'yagni', 'do we really need this', 'is this premature', asks to trim speculative scope, or when a plan adds functionality for hypothetical future requirements, configurability nobody asked for, abstractions with one implementation, or 'while we're at it' extras. Not for required security, accessibility, trust-boundary validation, or data-loss prevention; not for neutral assumption analysis (use first-principles); not for a persona-styled take (use what-would-elon-do)."
 argument-hint: "[feature, plan, or code to challenge]"
-version: 1.0.0
+version: 1.0.1
 ---
 
 Apply YAGNI to: $ARGUMENTS
@@ -27,7 +27,7 @@ Ron Jeffries (XP): "Always implement things when you actually need them, never w
 
 - YAGNI removes speculative scope, not rigour: input validation at trust boundaries, error handling that prevents data loss, security, and accessibility stay regardless.
 - YAGNI assumes you can add the feature later cheaply; that assumption holds only with tests and a codebase safe to refactor. If those are missing, say so rather than pretending deferral is free.
-- One irreversible-decision exception per proposal is plausible; three "irreversible" exceptions means the analysis has gone soft.
+- Every "irreversible" exception names its retrofit cost on its own evidence; one that cannot is a Delete, however many others qualified.
 
 ## Output format
 

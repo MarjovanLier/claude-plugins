@@ -47,7 +47,7 @@ Resolve the permitted set in this order; the first that applies wins:
 
 Never reject a type the repository itself permits. ADR-1's narrower list is a work-branch discipline, not a universal rule.
 
-**One type per commit.** A commit must contain only one type of change. This is a discipline enforced through code review.
+**One type per commit.** A commit must contain only one type of change (house rule, checked in code review where the repository has it; the user may accept a single type for a mixed change, see the create step).
 
 ## Scope Rules
 
@@ -70,7 +70,7 @@ Never reject a type the repository itself permits. ADR-1's narrower list is a wo
 - A body is **required** on every commit (house rule; the standard itself marks the body optional)
 - The body explains **why** the change was made, not what changed
 - Footers are optional
-- **Important**: Body and footer are lost when merging work branch to main branch
+- Where the repository squash-merges work branches (the house policy), body and footer do not reach main; a plain merge keeps them
 - Use footer for references: `Refs: #123` or `BREAKING CHANGE: description`
 
 ## Breaking Changes
@@ -81,7 +81,7 @@ Never reject a type the repository itself permits. ADR-1's narrower list is a wo
 
 ## Merge Commits
 
-Work branch merge commits to main use a **different standard**:
+Under the house squash-merge policy, work branch merge commits to main use a **different standard**:
 - The conventional commit messages from the work branch become part of the merge commit body
 - Individual commit descriptions are preserved as a changelog within the merge message
 
@@ -100,9 +100,9 @@ When `/conventional-commit create` is invoked:
 
 When `/conventional-commit validate` is invoked:
 1. Run `git log --format="%h %s" -20`, or limit to the range named in the provided arguments.
-2. Check each message against `<type>[scope]: <description>` using only the permitted types in the table above.
+2. Check each message against `<type>[scope]: <description>` using the permitted set resolved under Commit Types.
 3. Check each description: sentence case, imperative mood, no trailing full stop.
-4. Check a body is present (run `git log --format="%h|%b" -20` and flag commits with an empty body).
+4. Check a body is present (run `git log --format="%h|%b"` over the same range and flag commits with an empty body).
 5. Flag any commit that mixes multiple types of change.
 6. Report one line per commit: ✅ when compliant, ❌ with the specific violation named.
 

@@ -1,7 +1,7 @@
 ---
 name: wiki-ingest
 description: Ingest one explicitly identified input into the wiki as a single transaction. A URL, file, pasted text, command output, stated fact, or an investigation result from the current session. Use when the user asks to add a specific input or finding to the wiki, says "wiki this" or "ingest this into the wiki", or asks to record a conclusion, decision, or finding permanently. Generic "ingest this" or "file this" without wiki context is not this skill. Not for behavioural rules or memory updates, not for end-of-thread or pre-compaction knowledge sweeps (use wiki-checkpoint), and not for wiki health checks (use wiki-lint).
-version: 1.1.0
+version: 1.1.1
 ---
 
 # Wiki Ingest
@@ -53,7 +53,7 @@ Step 3 is not optional at any scale and "the index grep found nothing" does not 
 
 For each candidate claim, choose one action: **ignore** (already covered), **strengthen** (adds support), **qualify** (adds conditions or nuance), **replace** (supersedes; record the supersession), **contradict** (conflicts without superseding), **create** (genuinely new), or **link** (missing cross-reference only).
 
-- Contradict: flag per the destination's convention (global wiki: `<!-- CONTRADICTION -->`), never silently pick a winner.
+- Contradict: flag per the destination's convention, never silently pick a winner. Global wiki: the `<!-- CONTRADICTION -->` marker is a working device inside the session only; its lint errors on a committed marker and the pre-push hook blocks it, so before committing either resolve the conflict or state it in prose as an open question on the page.
 - Create: a new page only for a distinct entity or concept other pages would link to; otherwise edit the existing page in place. Integration beats accumulation: no isolated one-summary-page-per-input. Content an existing page already covers gets a link, not a restatement.
 
 Pause and confirm with the user before applying when the ingest involves any of: a contradiction with an existing page, replacing or removing substantive existing content, merging or renaming pages, or sensitive material (personal, confidential, or secret-bearing). Confirmation never overrides a destination's hard rules: a project wiki's ban on destructive rewrites stands regardless. Otherwise apply and report; the user can ask for a preview first at any time.
@@ -63,7 +63,7 @@ Pause and confirm with the user before applying when the ingest involves any of:
 Order: raw capture (before any page that cites it), then pages, then index, then log.
 
 - Pages follow the destination's conventions (global wiki: frontmatter per `SCHEMA.md`, body starts at H2, lead with the conclusion, no em or en dashes).
-- Every durable claim cites its source. Retained source: cite the source-layer file and the original locator in `sources`. Nothing retained and conversation-derived: cite `[source: conversation, weak]` exactly as written; never plain `[source: conversation]`, never an invented phrasing, never a fabricated source.
+- Every durable claim cites its source. Retained source: cite the source-layer file and the original locator in `sources`. Locator mode: cite the original locator and access date in `sources`, with no capture file to point at. Nothing retained and conversation-derived: cite `[source: conversation, weak]` exactly as written; never plain `[source: conversation]`, never an invented phrasing, never a fabricated source.
 - Index: one line per new page, at most 150 characters.
 - Log, where the destination keeps one: a newest-first `## [YYYY-MM-DD] ingest | <title>` entry, one to five lines, existing entries untouched.
 

@@ -10,15 +10,15 @@ description: >-
   in one pass), and resolves flagged issues. Do NOT use it for ordinary source-code
   linting (eslint, phpstan, markdownlint of non-wiki files) or for the full
   pre-compaction knowledge sweep (that is /wiki-checkpoint).
-version: 1.0.1
+version: 1.0.2
 ---
 
 # Wiki Lint
 
 Validate a Karpathy-style LLM wiki and refresh its search index in one pass. The
-lint script does both jobs: structural checks AND a qmd index rebuild, so "lint"
-and "index the pages" are the same operation here. Run the script, then resolve
-what it flags.
+global wiki's lint script does both jobs: structural checks AND a qmd index rebuild,
+so "lint" and "index the pages" are the same operation there; another wiki's script
+may not index (see section 2). Run the script, then resolve what it flags.
 
 ## 1. Detect the wiki directory
 
@@ -71,31 +71,34 @@ The lint logic lives in a shell script. Resolve it in this order:
 The script checks: orphan pages (not in index), dead index entries, duplicate index
 entries, broken `[[wiki-links]]`, missing/invalid frontmatter, missing `status`,
 stale pages (14-day `last_compiled` cutoff), unresolved `CONTRADICTION` markers,
-em/en dashes, near-empty pages, oversized pages (>49KB), date-suffixed pages that
-should be `snapshot`, and markdownlint via the committed config. It finishes by
-running `qmd update` and `qmd embed` to refresh the search index, so the pages
-become searchable as part of the same run.
+em/en dashes, near-empty pages, oversized pages (50 KiB and up), date-suffixed pages
+that should be `snapshot`, and markdownlint via the committed config. It finishes by
+running `qmd update`, and `qmd embed` when there is something new to embed, so the
+pages become searchable as part of the same run.
 
 If the qmd output warns about orphaned embedding chunks (qmd hints when they
 exceed 10% of vectors), run `qmd cleanup` and record the result in the report.
 Do not run cleanup when no hint appears; it vacuums the whole index.
 
-Exit codes: `0` clean, `1` warnings present, `2` errors present. The qmd index is
-stored under `~/.config/qmd/`, not in the repo, so re-indexing never produces git
-changes.
+Exit codes on a completed run: `0` clean, `1` warnings present, `2` errors present
+(an early abort, such as a missing wiki root, exits before the summary). The qmd
+index lives outside the wiki (`qmd status` shows where), so re-indexing the global
+wiki produces no git changes there.
 
 ## 4. Resolve what it flags
 
-The script's own policy is that flagged items are not background noise: fix them.
-How aggressively depends on whose wiki it is.
+The script's own policy is: fix every flagged item on a file this session touched,
+pre-existing or not, and report items on untouched files without fixing them. A
+standalone lint the user asks for is the exception where the whole wiki is in scope.
 
-- **Global wiki (`~/wiki`)**: this is the user's own. Fix all flagged errors and
-  warnings, then re-run until clean. Read `$WIKI_DIR/SCHEMA.md` first if a fix
-  touches conventions (frontmatter fields, status values, citation format). Common
-  fixes: replace em/en dashes with the right substitute, add missing frontmatter or
-  `status`, register an orphan page in `index.md` (one line, ~150 char cap), correct
-  a dead index path, set `status: snapshot` or refresh `last_compiled` on a stale
-  page.
+- **Global wiki (`~/wiki`)**: this is the user's own. On a user-invoked lint, fix all
+  flagged errors and warnings, then re-run until clean. Read `$WIKI_DIR/SCHEMA.md`
+  first if a fix touches conventions (frontmatter fields, status values, citation
+  format). Common fixes: replace em/en dashes with the right substitute, add missing
+  frontmatter or `status`, register an orphan page in `index.md` (one line, ~150 char
+  cap), correct a dead index path, set `status: snapshot` on a dated page. A stale
+  page's `last_compiled` moves only after its sources were actually re-checked; a
+  partial re-check is declared on the page.
 - **Project-local wiki**: treat as read-only by default. Report the issues and fix
   only under explicit user direction, or only what the current session introduced.
   Never destructively rewrite a project wiki, and match its existing conventions

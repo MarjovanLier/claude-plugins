@@ -11,7 +11,7 @@
     {
       "name": "funzies",
       "description": "Thinking-style skills and an agent: first-principles analysis, YAGNI scope review, sequential decision analysis, and a What Would Elon Do lens",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"
@@ -25,7 +25,7 @@
     {
       "name": "wiki-toolkit",
       "description": "Skills for maintaining a Karpathy-style LLM wiki: ingest knowledge, look it up, run checkpoints, and lint the wiki",
-      "version": "1.10.0",
+      "version": "1.10.1",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"
@@ -39,7 +39,7 @@
     {
       "name": "git-conventions",
       "description": "Git workflow skills: Conventional Commit messages and merge request contribution descriptions",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"
@@ -64,7 +64,7 @@
     {
       "name": "php-code-simplifier",
       "description": "Agent that simplifies and refines PHP code for clarity, consistency, and maintainability while preserving functionality",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"
