@@ -88,7 +88,13 @@ Then run the rule audit: check every memory rule and wiki page the session actua
 
 Triggerability: when a relevant rule or page was applied only after a failed or delayed route, or Step 2 surfaces overlapping coverage the session should have consulted, compare the initiating request with that item's `MEMORY.md` line or index entry; when the line omitted the demonstrated trigger or discriminator, sharpen it under the applicable write guards. Limited to items the session or Step 2 actually surfaced; never a store-wide index rewrite.
 
-Skill candidates: while auditing, flag items that have outgrown their container as promotion candidates: a memory feedback rule whose **Why:** trail carries three or more dated applications, or a wiki method page the session followed as a multi-step procedure too large for a one-paragraph rule. Candidates appear on the report's `Skill candidates` line and nowhere else: the sweep never creates or modifies skill files; compiling a candidate into a Claude Code skill is a separate act the user directs.
+Skill candidates: while auditing, flag items that have outgrown their container as promotion candidates: a memory feedback rule whose **Why:** trail carries three or more dated applications; two or more feedback rules across the memory stores that share a `metadata.skill` value; or a wiki method page the session followed as a multi-step procedure too large for a one-paragraph rule. Find the shared-skill case with a store-wide scan. Prefix the glob with `./` because the project slugs start with a hyphen, and control a zero result by re-running the same scan for `^  type:`:
+
+```bash
+cd ~/.claude/projects && grep -rh '^  skill:' ./*/memory/feedback_*.md | sort | uniq -c | sort -rn
+```
+
+Candidates appear on the report's `Skill candidates` line and nowhere else, naming the skill and the rule filenames. The sweep never creates or modifies skill files; compiling a candidate is a separate act the user directs, normally through the skill-review skill.
 
 Routing test: changes a future method, route to memory; changes only the stored answer, route to wiki. One event may produce both, but the content must differ (behavioural rule in memory, domain fact in wiki).
 
@@ -106,7 +112,7 @@ Update an existing `feedback_*.md` when one covers the rule; create `feedback_<s
 
 ### 5. Write Memory
 
-Write memory-worthy items (profile updates, feedback rules, project context, reference pointers, retrospective findings) to `MEMORY_DIR` with the required frontmatter (`name`, `description`, type metadata) and ensure each memory file has exactly one one-line entry in `MEMORY.md`, updating an existing entry rather than duplicating it. Check for an existing file to update before creating one.
+Write memory-worthy items (profile updates, feedback rules, project context, reference pointers, retrospective findings) to `MEMORY_DIR` with the required frontmatter (`name`, `description`, type metadata) and ensure each memory file has exactly one one-line entry in `MEMORY.md`, updating an existing entry rather than duplicating it. Check for an existing file to update before creating one. When a feedback rule's finding arose while a named skill's instructions were in effect (the session invoked it or loaded its `SKILL.md`) and the rule would change that skill's text, add `skill: [<installed skill name>]` under `metadata:`, listing every such skill. A rule whose trigger falls outside every skill carries no such field.
 
 Admission threshold: memory is injected into every session, so a false or over-general rule costs more than a missed fact. Create a new feedback rule only when its trigger and action are specific and it is supported by an explicit user correction, repeated observation, deterministic verification, or a high-consequence failure or near miss with an established cause. Material below this threshold is not a valid finding: omit it silently rather than reporting it as not written. `MEMORY.md` entry lines state a specific trigger and action; include the cause only when it narrows applicability.
 
