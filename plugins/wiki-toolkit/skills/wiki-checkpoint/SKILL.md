@@ -40,6 +40,12 @@ git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only
 
 Both flags are load-bearing and do different jobs. `--ff-only` refuses an unintended merge or rebase commit. `core.hooksPath=/dev/null` is what keeps hooks out: git runs the `post-merge` hook even on a fast-forward pull, and where that hook lints the wiki it dirties the tree mid-sweep, which the status check below would then read as pre-existing local changes and use to block every write. Suppressing hooks here is the only reason the sweep stays deterministic.
 
+A refusal reading `cannot pull with rebase: You have unstaged changes` is not yet a failed pull. The wiki sets `pull.rebase=true`, which makes git refuse on any dirty tree before it has checked whether a fast-forward would touch the dirty files at all. Retry once with the rebase setting overridden and take that outcome as the pull result; `--ff-only` still refuses every merge, so the dirty files are never touched:
+
+```bash
+git -c core.hooksPath=/dev/null -c pull.rebase=false -C ~/wiki pull --ff-only
+```
+
 A pull that actually ran and failed blocks all wiki writes: report findings that would have been written as `not written: global wiki pull failed`; a failed pull with no wiki-route findings is a failure only, never an invented not-written entry.
 
 When `WIKI_DIR` is inside a git repository, run `git -C "$WIKI_DIR" status` before writing. Never sweep pre-existing uncommitted changes into the checkpoint commit, and never edit a file that already carries uncommitted changes; report the finding routed to it as `not written: blocked by pre-existing local changes` and mention the dirty file in the report. A dirty required companion file (index, log, or capture target) blocks the dependent write as well. For a project wiki, a pre-existing dirty working tree blocks the entire wiki route: name the dirty files as one report-level blocking condition, not merely per-finding noise, because the guard is not self-clearing and silently disables that wiki indefinitely.

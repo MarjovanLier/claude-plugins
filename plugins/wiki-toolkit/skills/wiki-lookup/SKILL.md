@@ -46,6 +46,6 @@ Never answer from search snippets. Retrieve each shortlisted page in full and fo
 
 When the selected destination is `~/wiki/` and the complete initial search finds no answer, run this once before concluding absence:
 
-1. `git -C ~/wiki status --porcelain` must be empty; then `git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only` (hook suppression keeps the recovery deterministic; the post-merge hook would otherwise run a full lint).
-2. Dirty checkout, no usable upstream, diverged history, or a failed pull: do not stash, merge, rebase, or reset. State that remote freshness could not be verified and answer from the unchanged local state.
+1. `git -C ~/wiki status --porcelain` must be empty; then `git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only` (hook suppression keeps the recovery deterministic; the post-merge hook would otherwise run a full lint). When the status is not empty, run the pull once as `git -c core.hooksPath=/dev/null -c pull.rebase=false -C ~/wiki pull --ff-only` instead: the wiki sets `pull.rebase=true`, which refuses on any dirty tree before checking the fast-forward, while the plain fast-forward is refused by git itself only when upstream touches a dirty file.
+2. A refused fast-forward, no usable upstream, diverged history, or a failed pull: do not stash, merge, rebase, or reset. State that remote freshness could not be verified and answer from the unchanged local state.
 3. If the pull advanced `HEAD`: run `qmd update && qmd embed` (`update` has no collection filter, so this refreshes every configured collection), then search again through qmd and `rg` before concluding absence.
