@@ -2,7 +2,7 @@
 name: conventional-commit
 description: Create and validate commit messages following the Conventional Commits standard. Use when committing code, reviewing commit messages, converting existing commits to conventional format, or when someone asks about commit message formatting. Also use proactively when preparing commits to ensure compliance, and when a commit linter (commitlint or a commit-msg hook) rejects a commit message and the last commit needs correcting and amending.
 argument-hint: "[create|validate|convert|fix] [optional message, branch, or linter output]"
-version: 1.0.2
+version: 1.0.3
 ---
 
 # Conventional Commits
@@ -24,6 +24,7 @@ All commit descriptions for commits to work branches must use the [Conventional 
 Resolve the permitted set in this order; the first that applies wins:
 
 1. **The repository's own policy.** A `commitlint` config (`.commitlintrc*`, `commitlint.config.*`, or a `commitlint` key in `package.json`), a documented type list in `README.md`, or an equivalent declared standard. Follow it exactly.
+   A machine-global linter counts as policy too: a Claude Code PostToolUse hook (for example `~/.claude/last_commit.py` running a `last_commit` commitlint wrapper) lints `HEAD` of whatever repository the shell sits in after every `git commit`, with its own type set, subject and body limits and required trailers, even in a repository that declares nothing. Read that hook's rules before assuming a silent repository allows the full set; on a machine with such a hook, its narrower set wins over step 3.
 2. **A declared ADR-1 repository.** Use the core 11 only: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
 3. **Otherwise**, the full set below.
 
@@ -78,6 +79,7 @@ Never reject a type the repository itself permits. ADR-1's narrower list is a wo
 - Add `!` after type/scope: `feat(api)!: Remove legacy endpoint`
 - Or add `BREAKING CHANGE:` in the footer
 - Both methods are valid; the `!` suffix is preferred for visibility
+- Where the active linter enforces `subject-exclamation-mark` (commitlint's config-conventional does), the `!` form is rejected after the fact; use the `BREAKING CHANGE:` footer there
 
 ## Merge Commits
 
@@ -92,12 +94,12 @@ When `/conventional-commit create` is invoked:
 2. Run `git diff --staged` to understand what changed.
 3. Determine the type from the table above. IF the staged changes span more than one type, list the files grouped per type, suggest splitting into separate commits, and STOP unless the user accepts a single type.
 4. Check `README.md` at the repository root for defined scopes. IF scopes are defined, use the matching one. IF scope is marked required, never omit it. IF no scopes are defined, include a scope only when the impact area is obvious.
-5. Write the description: sentence case, imperative mood, no trailing full stop, 10 to 50 characters.
+5. Write the description: sentence case, imperative mood, no trailing full stop, 10 to 50 characters. Check it is not a stale copy: `git log --oneline -15 | grep -F '<description>'` must print nothing, because a heredoc adapted from an earlier commit in the same session has shipped a duplicate title before.
 6. Write the body (required): explain why the change is being made, with every line wrapped at 72 characters.
 7. Append any trailers the repository's hooks or rules require other than the sign-off (for example a `Claude-Session:` line) as the last lines of the message. Never type `Signed-off-by`; step 9 has git write it, and it must be the final line.
 8. Measure the message, never eyeball it: pipe the same text through `awk 'NR==1{sub(/^[^:]*: /,""); if(length>50)print "subject "length} NR>1&&length>72{print NR": "length}'`. Anything it prints is rewrapped or shortened before committing.
 9. Commit with `git commit -s -F -`, passing the full message on standard input. `-s` appends `Signed-off-by` from the repository's configured `user.name` and `user.email`, after every trailer in the message. Never pass a multi-line message with `-m`. Standard input avoids shell quoting problems, preserves the pre-wrapped body, and leaves no shared temporary file for a concurrent session to clobber. If a file is genuinely needed, use a uniquely named one in the session scratchpad directory and remove it afterwards.
-10. Verify with `git show --stat HEAD` that only the intended files were committed. Push in a separate step, after the commit hook has had its say.
+10. Verify with `git show --stat HEAD` that only the intended files were committed. Push in a separate Bash call, after the commit hook has had its say: a PostToolUse linter runs only when the whole command has finished, so `git commit ... && git push` in one call pushes an unlinted message, and the repair is then an amend plus a force-push instead of a plain re-commit.
 
 When `/conventional-commit validate` is invoked:
 1. Run `git log --format="%h %s" -20`, or limit to the range named in the provided arguments.
@@ -131,6 +133,7 @@ Then classify:
 - `UNBORN` printed: there is no commit to amend under any circumstances. Branch A, always.
 - The rejection came from a local hook during a commit you just attempted: Branch A.
 - The rejection names an existing commit (CI output, a SHA, "the last commit"): Branch B.
+- The rejection came from a PostToolUse linter after a Bash call that changed directory (`cd ~/wiki && git commit ... && cd -`, or any `git -C <other-repo> commit`): the hook lints `HEAD` of the repository the shell ended in, which may be an unrelated commit by someone else. Run `git log -1 --format='%an %s'` in that repository and `git -C <intended-repo> log -1` in the one you committed to. If the flagged commit is not yours, it is a false positive: amend nothing and report it.
 - **You cannot tell:** ASK. Do not guess. Staged files do not settle it, because a developer routinely has unrelated work staged while wanting the previous commit's message fixed, and that state satisfies both branches. Guessing wrong in this direction is the destructive one: it rewrites a good commit and folds unrelated work into it.
 
 One caveat for Branch A: if the rejected attempt used `git commit -a` or a pathspec, the changes may not be in the index at all, so a bare `git commit` would commit nothing. Re-stage exactly what the original attempt covered, or re-run it with the same flags and the corrected message.

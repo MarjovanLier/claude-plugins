@@ -48,6 +48,8 @@ git -c core.hooksPath=/dev/null -c pull.rebase=false -C ~/wiki pull --ff-only
 
 A pull that actually ran and failed blocks all wiki writes: report findings that would have been written as `not written: global wiki pull failed`; a failed pull with no wiki-route findings is a failure only, never an invented not-written entry.
 
+Alongside the pull, record three facts in one call and keep them for the report: `git -C ~/wiki status --short`, `git -C ~/wiki rev-list --left-right --count HEAD...@{u}`, and `ssh-add -l`. A pull that fails with `Permission denied (publickey)` means the ssh identity is not in the agent (the hardware key is out or locked): name the missing identity to the user; the remote and the tree are not at fault, and the local clone stays fully readable for Step 2. A clean tree can still be ahead of upstream (an earlier session's commit that never pushed); report the divergence with the commit hash and never reconcile it inside the sweep, because a rebase plus push rewrites shared history.
+
 When `WIKI_DIR` is inside a git repository, run `git -C "$WIKI_DIR" status` before writing. Never sweep pre-existing uncommitted changes into the checkpoint commit, and never edit a file that already carries uncommitted changes; report the finding routed to it as `not written: blocked by pre-existing local changes` and mention the dirty file in the report. A dirty required companion file (index, log, or capture target) blocks the dependent write as well. For a project wiki, a pre-existing dirty working tree blocks the entire wiki route: name the dirty files as one report-level blocking condition, not merely per-finding noise, because the guard is not self-clearing and silently disables that wiki indefinitely.
 
 Exception: a direct user instruction in the current conversation may authorise a specific non-destructive append to a dirty `index.md` or `log.md` together with its page write; commit nothing in that case and leave the commit to the user. The exception never lets ordinary checkpoint findings bypass the block.
@@ -151,6 +153,15 @@ Fix every error or warning on files the sweep touched, pre-existing or not; repo
 ### 7. Commit and Push
 
 Global wiki: whenever the checkpoint made writes, make one batched commit path-limited to the files it changed (conventional format, signed-off), then push. Before staging each file, confirm with `git diff -- <path>` that every hunk is this sweep's own: a live peer session can share the working tree, and a path-limited add stages the whole file as it sits on disk, so a foreign hunk makes the file a pre-existing local change and its finding is reported as blocked. A push rejected because upstream advanced after the opening pull is recovered once. First `git fetch` and check whether the remote already holds the local commit; a peer on the same tree may have rebased and pushed it, in which case the rejection reads `cannot lock ref` and nothing remains to push. Otherwise `git -c core.hooksPath=/dev/null -C ~/wiki pull --rebase`, then push again and report the final result; if the rebase conflicts, `git -C ~/wiki rebase --abort` and report manual resolution. Only a non-fast-forward rejection gets this recovery; any other failed push is reported with the local commit hash.
+
+The global-wiki commit is gpg-signed with a hardware key, so the first commit of a session opens a PIN prompt. Run the commit in its own Bash call, not chained with the push. If it fails with `gpg: signing failed: Operation cancelled`, the commit object was not written and the sweep's files are still staged: that is exactly the footprint the dirty-tree guard above reads as pre-existing local changes, and it blocks every later checkpoint until committed. Retry the commit once. On a second cancellation, write the message to a file in the session scratchpad and hand the user the two exact commands to run themselves, in this order:
+
+```text
+! git -C ~/wiki commit -F <scratchpad>/wiki-commit-msg.txt
+! git -C ~/wiki push
+```
+
+Name the staged files in the report and say that they block the next checkpoint until committed. After a commit of your own, verify it before claiming it: `git -C ~/wiki log -1 --format='%h %G?'` shows the hash and a signature status, and `git -C ~/wiki rev-list --left-right --count @{u}...HEAD` must read `0 0` after the push.
 
 Lint does not gate the commit. Only a lint error the sweep itself introduced blocks it, and then the fix is to correct that error and commit. A lint that could not run (no compatible runner) must never leave the writes uncommitted: doing so strands them in the working tree, where the dirty-tree guard above then blocks every later checkpoint against the same wiki.
 
