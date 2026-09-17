@@ -58,7 +58,7 @@ Exception: a direct user instruction in the current conversation may authorise a
 
 ### 1. Scan the Conversation
 
-When the checkpoint is auto-triggered (hook-injected context names a pre-compaction snapshot, a transcript path, or unconsumed snapshots from previous sessions), scan that full record rather than only the compacted summary; it is the evidence base for captures and citations. An auto-triggered run carries the same write authorisation as a user invocation; the standing hook instruction is the user direction.
+When the checkpoint is auto-triggered (hook-injected context names a pre-compaction snapshot, a transcript path, or unconsumed snapshots from previous sessions), scan that full record rather than only the compacted summary; it is the evidence base for captures and citations. An auto-triggered run carries the same write authorisation as a user invocation; the standing hook instruction is the user direction for the current session's own snapshot. Snapshots from other sessions are swept only when the user directs it in this conversation; the startup notice reports them and is not that direction.
 
 Snapshot lifecycle (the hooks capture; the checkpoint consumes). Snapshots live at `~/.claude/wiki-checkpoint/pending/<scope>/<session-id>.jsonl` with a consumed byte watermark at `consumed/<scope>/<session-id>`. Before scanning, note the snapshot's byte size; that frozen boundary is the only size the watermark may advance to. Scan only bytes after the current watermark (`tail -c +<watermark+1>`). On completion, apply exactly one disposition per snapshot and report it:
 
