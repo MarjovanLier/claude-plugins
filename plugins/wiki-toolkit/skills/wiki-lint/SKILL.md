@@ -68,7 +68,7 @@ The lint logic lives in a shell script. Resolve it in this order:
 
 ## 3. Run it and read the summary
 
-The script checks: orphan pages (not in index), dead index entries, duplicate index
+The script checks: orphan pages (not in index, or lacking a `summary` frontmatter key when the wiki keeps no index file), dead index entries, duplicate index
 entries, broken `[[wiki-links]]`, missing/invalid frontmatter, missing `status`,
 stale pages (14-day `last_compiled` cutoff), unresolved `CONTRADICTION` markers,
 em/en dashes, near-empty pages, oversized pages (50 KiB and up), date-suffixed pages
@@ -95,8 +95,8 @@ standalone lint the user asks for is the exception where the whole wiki is in sc
   flagged errors and warnings, then re-run until clean. Read `$WIKI_DIR/SCHEMA.md`
   first if a fix touches conventions (frontmatter fields, status values, citation
   format). Common fixes: replace em/en dashes with the right substitute, add missing
-  frontmatter or `status`, register an orphan page in `index.md` (one line, ~150 char
-  cap), correct a dead index path, set `status: snapshot` on a dated page. A stale
+  frontmatter or `status`, give an orphan page its `summary` frontmatter, or its `index.md` line where
+  the wiki keeps one (~150 char cap either way), correct a dead index path, set `status: snapshot` on a dated page. A stale
   page's `last_compiled` moves only after its sources were actually re-checked; a
   partial re-check is declared on the page.
 - **Project-local wiki**: treat as read-only by default. Report the issues and fix

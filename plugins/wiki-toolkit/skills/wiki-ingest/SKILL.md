@@ -22,7 +22,7 @@ Same cascade as the checkpoint: `<project root>/wiki/` when it exists, otherwise
 ## Git safety
 
 - Global destination: synchronise before reading its schema or pages, with `git -c core.hooksPath=/dev/null -C ~/wiki pull --ff-only`. `--ff-only` refuses an unintended merge or rebase commit; `core.hooksPath=/dev/null` keeps hooks out, because git runs the `post-merge` hook even on a fast-forward pull and a wiki-linting hook would dirty the tree mid-transaction. Attempt this only when `~/wiki` is a git repository with a usable upstream: a plain directory or a remote-less repository is a normal setup, so note it and continue rather than blocking. A refusal reading `cannot pull with rebase: You have unstaged changes` has not run yet: the wiki sets `pull.rebase=true`, which refuses on any dirty tree before checking whether a fast-forward would touch the dirty files, so retry once as `git -c core.hooksPath=/dev/null -c pull.rebase=false -C ~/wiki pull --ff-only` and take that outcome as the result (`--ff-only` still refuses every merge). A pull that ran and failed blocks all writes; report `not written: global wiki pull failed`.
-- Any git-repo destination: before the first write, determine every file the ingest will touch (raw capture, pages, index, and a log when the destination keeps one; the global wiki keeps none since 2026-09-17) and run `git status`. If any of them already carries uncommitted changes, the whole transaction is blocked before the first write: report `not written: blocked by pre-existing local changes` and name the dirty files. Never sweep pre-existing uncommitted changes into the ingest commit. Exception: when only `index.md` or a destination-kept log is dirty and the page targets themselves are clean, this explicit user instruction authorises the page write plus a non-destructive append to those files; make no commit, and report that the user owns the combined dirty state and the commit. The exception never extends to editing a dirty substantive page.
+- Any git-repo destination: before the first write, determine every file the ingest will touch (raw capture, pages, and an index or log when the destination keeps one; the global wiki keeps neither since 2026-09-17) and run `git status`. If any of them already carries uncommitted changes, the whole transaction is blocked before the first write: report `not written: blocked by pre-existing local changes` and name the dirty files. Never sweep pre-existing uncommitted changes into the ingest commit. Exception: when only `index.md` or a destination-kept log is dirty and the page targets themselves are clean, this explicit user instruction authorises the page write plus a non-destructive append to those files; make no commit, and report that the user owns the combined dirty state and the commit. The exception never extends to editing a dirty substantive page.
 
 ## Workflow
 
@@ -43,7 +43,7 @@ The user overrides per ingest ("retain nothing", "keep the whole thing"). Captur
 
 In this order, always all three:
 
-1. The destination's index or equivalent catalogue.
+1. The destination's index or equivalent catalogue; in the global wiki, `scripts/catalogue.sh <subfolder>` for the topic folder the input targets.
 2. Exact-pattern `rg` over the page store for concrete terms (names, IDs, slugs, dates).
 3. Semantic search through the collection matching the destination. Resolve it by absolute path via `mcp__qmd__status`, never by guessing the collection name; scope the `mcp__qmd__query` call to that collection and always pass an `intent`. When the qmd tools are deferred, load them first in one ToolSearch call; deferred is not absent. No matching collection or no qmd: a separate text search using synonyms and paraphrases of the topic is the fallback; repeating step 2's exact terms does not satisfy step 3.
 
@@ -60,7 +60,7 @@ Pause and confirm with the user before applying when the ingest involves any of:
 
 ### 4. Write
 
-Order: raw capture (before any page that cites it), then pages, then index, then the destination's log when it keeps one (the global wiki does not).
+Order: raw capture (before any page that cites it), then pages (each new page carrying its `summary` frontmatter), then the destination's index and log where it keeps them (the global wiki keeps neither).
 
 - Pages follow the destination's conventions (global wiki: frontmatter per `SCHEMA.md`, body starts at H2, lead with the conclusion, no em or en dashes).
 - Every durable claim cites its source. Retained source: cite the source-layer file and the original locator in `sources`. Locator mode: cite the original locator and access date in `sources`, with no capture file to point at. Nothing retained and conversation-derived: cite `[source: conversation, weak]` exactly as written; never plain `[source: conversation]`, never an invented phrasing, never a fabricated source.
