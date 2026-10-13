@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "marjo-claude-plugins",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Claude Code plugins: PHP language servers, git workflow skills, and LLM wiki maintenance",
   "owner": {
     "name": "Marjo van Lier",
@@ -25,7 +25,7 @@
     {
       "name": "wiki-toolkit",
       "description": "Skills for maintaining a Karpathy-style LLM wiki: ingest knowledge, look it up, run checkpoints, and lint the wiki",
-      "version": "1.18.0",
+      "version": "1.19.0",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"
@@ -34,6 +34,17 @@
       "skills": [
         "./skills/"
       ],
+      "category": "development"
+    },
+    {
+      "name": "wiki-findings",
+      "description": "Opt-in companion to wiki-toolkit: checks each turn for durable findings, queues drafts, and starts the wiki checkpoint when the session goes idle",
+      "version": "0.1.0",
+      "author": {
+        "name": "Marjo van Lier",
+        "email": "marjo.vanlier@gmail.com"
+      },
+      "source": "./plugins/wiki-findings",
       "category": "development"
     },
     {

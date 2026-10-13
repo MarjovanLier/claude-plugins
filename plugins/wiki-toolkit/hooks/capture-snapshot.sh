@@ -10,8 +10,9 @@ sid=$(json_field session_id)
 cwd=$(json_field cwd)
 
 # Bounded retention runs on every invocation, not only successful captures
-# (WC-50): transcripts 30 days, stale temp files 1 day, watermarks 180 days.
-find "$BASE/pending" "$BASE/blocked" -name '*.jsonl' -mtime +30 -delete 2>/dev/null
+# (WC-50, WC-58): transcripts and finding queues 30 days, stale temp files
+# 1 day, watermarks 180 days.
+find "$BASE/pending" "$BASE/blocked" "$BASE/findings" -name '*.jsonl' -mtime +30 -delete 2>/dev/null
 find "$BASE/pending" -name '.*.tmp' -mtime +1 -delete 2>/dev/null
 find "$BASE/consumed" "$BASE/nudged" -type f -mtime +180 -delete 2>/dev/null
 
@@ -43,11 +44,18 @@ if [ -f "$snap" ]; then
   old=$(wc -c < "$snap" | tr -d ' ')
   [ "$size" -le "$old" ] && exit 0
 elif [ "$event" = "session-end" ]; then
-  # New session-end candidates must clear a noise floor on the UNCONSUMED
-  # delta; PreCompact captures every non-empty suffix, floor-free.
-  floor="${WIKI_CHECKPOINT_FLOOR:-32768}"
-  case "$floor" in '' | *[!0-9]*) floor=32768 ;; esac
-  [ $((size - consumed)) -lt "$floor" ] && exit 0
+  # A queue file means the wiki-findings plugin ran here (WC-50, WC-58):
+  # capture only a session it queued a finding in. Without one, new
+  # session-end candidates must clear a noise floor on the UNCONSUMED
+  # delta. PreCompact captures every non-empty suffix, floor-free.
+  queue="$BASE/findings/${sid:-unknown}.jsonl"
+  if [ -f "$queue" ]; then
+    [ -s "$queue" ] || exit 0
+  else
+    floor="${WIKI_CHECKPOINT_FLOOR:-32768}"
+    case "$floor" in '' | *[!0-9]*) floor=32768 ;; esac
+    [ $((size - consumed)) -lt "$floor" ] && exit 0
+  fi
 fi
 
 umask 077
