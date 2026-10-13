@@ -1,6 +1,6 @@
 {
   "name": "wiki-findings",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Checks each turn for durable findings, queues drafts for the wiki checkpoint, and starts the checkpoint when the session goes idle.",
   "author": {
     "name": "Marjo van Lier",
