@@ -1,7 +1,7 @@
 ---
 name: wiki-ingest
 description: Ingest one explicitly identified input into the wiki as a single transaction. A URL, file, pasted text, command output, stated fact, or an investigation result from the current session. Use when the user asks to add a specific input or finding to the wiki, says "wiki this" or "ingest this into the wiki", or asks to record a conclusion, decision, or finding permanently. Also use when the user pastes a record (a portal or dossier extract, a lab table, an email) into a wiki repository session with no question attached: that is a request to file it. Generic "ingest this" or "file this" without wiki context is not this skill. Not for behavioural rules or memory updates, not for end-of-thread or pre-compaction knowledge sweeps (use wiki-checkpoint), and not for wiki health checks (use wiki-lint).
-version: 1.2.0
+version: 1.2.1
 ---
 
 # Wiki Ingest
@@ -73,7 +73,7 @@ Order: raw capture (before any page that cites it), then pages (each new page ca
 - Pages follow the destination's conventions (global wiki: frontmatter per `SCHEMA.md`, body starts at H2, lead with the conclusion, no em or en dashes).
 - Every durable claim cites its source. Retained source: cite the source-layer file and the original locator in `sources`. Locator mode: cite the original locator and access date in `sources`, with no capture file to point at. Nothing retained and conversation-derived: cite `[source: conversation, weak]` exactly as written; never plain `[source: conversation]`, never an invented phrasing, never a fabricated source.
 - A negative about a store ("Gmail holds no X", "no published case") is written with its query beside it: the terms, the store and scope, and the date run. A bare negative cannot later be told apart from a search that missed.
-- Global wiki, before the commit, check what the pre-push lint rejects or warns on: every new or changed `summary` at most 150 characters (`awk -F'"' '/^summary:/{print length($2)}' <page>`), every body URL outside a `[source: ...]` bracket wrapped in `<...>`, and a blank line before and after every added list (`markdownlint-cli2 <page>` reports 0 issues).
+- Global wiki, before the commit, check what the pre-push lint rejects or warns on: every new or changed `summary` at most 150 characters (`awk '/^summary:/{sub(/^summary: *"/,""); sub(/" *$/,""); print length}' <page>`; it has no dollar-and-digit field reference, because Claude Code fills those in with the invocation's arguments), every body URL outside a `[source: ...]` bracket wrapped in `<...>`, and a blank line before and after every added list (`markdownlint-cli2 <page>` reports 0 issues).
 - Index: one line per new page, at most 150 characters.
 - Log, where the destination keeps one: a newest-first `## [YYYY-MM-DD] ingest | <title>` entry, one to five lines, existing entries untouched.
 
