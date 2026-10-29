@@ -1,7 +1,7 @@
 ---
 name: wiki-ingest
-description: Ingest one explicitly identified input into the wiki as a single transaction. A URL, file, pasted text, command output, stated fact, or an investigation result from the current session. Use when the user asks to add a specific input or finding to the wiki, says "wiki this" or "ingest this into the wiki", or asks to record a conclusion, decision, or finding permanently. Also use when the user pastes a record (a portal or dossier extract, a lab table, an email) into a wiki repository session with no question attached: that is a request to file it. Generic "ingest this" or "file this" without wiki context is not this skill. Not for behavioural rules or memory updates, not for end-of-thread or pre-compaction knowledge sweeps (use wiki-checkpoint), and not for wiki health checks (use wiki-lint).
-version: 1.2.1
+description: Ingest one explicitly identified input into the wiki as a single transaction. A URL, file, pasted text, command output, stated fact, or an investigation result from the current session. Use when the user asks to add a specific input or finding to the wiki, says "wiki this" or "ingest this into the wiki", or asks to record a conclusion, decision, or finding permanently. Also use when the user pastes a record (a portal or dossier extract, a lab table, an email, a screenshot) into a wiki repository session with no question attached: that is a request to file it. A paste sent in the middle of an open question on its own topic is input to that answer, not a filing request. Generic "ingest this" or "file this" without wiki context is not this skill. Not for behavioural rules or memory updates, not for end-of-thread or pre-compaction knowledge sweeps (use wiki-checkpoint), and not for wiki health checks (use wiki-lint).
+version: 1.2.2
 ---
 
 # Wiki Ingest
@@ -29,7 +29,7 @@ Same cascade as the checkpoint: `<project root>/wiki/` when it exists, otherwise
 
 ### 1. Identify the input and retention mode
 
-Read the input in full before extracting claims; never infer content from a filename, URL title, search snippet, or memory. After a compaction, the summary (even one marked verified) is a list of leads: before each Edit, `rg -n` the source for the fact and read the matching lines in the same turn; write a date, an age or a context noun (occasion, venue, genre) only when the line states it, and compute an age from the birth date on the page. An input that is missing, inaccessible, or unreadable makes no wiki writes: report `not written: input unavailable or unreadable`.
+Read the input in full before extracting claims; never infer content from a filename, URL title, search snippet, or memory. After a compaction, the summary (even one marked verified) is a list of leads: before each Edit, `rg -n` the source for the fact and read the matching lines in the same turn; write a date, an age or a context noun (occasion, venue, genre) only when the line states it, and compute an age from the birth date on the page. In a photo, a handwritten form, small print or a chart, read each ambiguous value (a tick or a cell with its column header) in an enlarged crop before writing it, and file a reading that stays doubtful as `[reading uncertain: ...]`. An input that is missing, inaccessible, or unreadable makes no wiki writes: report `not written: input unavailable or unreadable`.
 
 Retention mode decides what survives in the destination's source layer (`raw/` for the global wiki):
 
@@ -52,9 +52,11 @@ Step 3 is not optional at any scale and "the index grep found nothing" does not 
 
 One exception: a paste that is a newer copy of a record the wiki already holds verbatim (an in-flight memory names the page and the page cites a raw capture) is reconciled by diffing the paste against that capture; the three searches are skipped and only the changed rows are captured and filed.
 
-A pasted email is one message of a correspondence. Before writing any open question, "no reply" or "not established" line, search the mailbox for the sender's whole history (`from:<sender> OR to:<sender>` with no date limit, plus sent and drafts) and read every thread the page does not already cite. When no mail tool is loaded, scope each such line to "the pasted thread" and say in the report that the mailbox was not searched.
+A pasted email is one message of a correspondence. Before writing any open question, "no reply" or "not established" line, search the mailbox for the sender's whole history (`from:<sender> OR to:<sender>` with no date limit, plus sent and drafts) and read every thread the page does not already cite. When no mail tool is loaded or it fails to authenticate, scope each such line to "the pasted thread", say in the report that the mailbox was not searched, and ask the user in that report to reconnect the mail tool.
 
-When the input is an AI month summary of one chat, or the page to be written concerns a dated family event or a person a summary-built page leaves unnamed, grep the raw WhatsApp export trees for the date or name before writing (`ls` the export directory for a first-name-only person): a summary bounds one file, and the raw text outranks it. The temporary WhatsApp qmd collections locate a described event but are never cited or named on a page; their setup is on `pages/dev/qmd-search-setup.md`.
+When the input is an AI month summary of one chat, or the page to be written concerns a dated family event or a person a summary-built page leaves unnamed, grep the raw WhatsApp export trees for the date or name before writing (`ls` the export directory for a first-name-only person): a summary bounds one file, and the raw text outranks it. The temporary WhatsApp qmd collections locate a described event but are never cited or named on a page or in a raw capture; their setup is on `pages/dev/qmd-search-setup.md`.
+
+A word or name on the input that cannot be placed (a bare word under a title, a stranger where a known person was expected) is a search term, not a finding: run `rg -n -i -w '<word>'` over the page store and the source layer, and on the user's own paperwork test it against their address, names and account numbers, before writing "unknown" or "not explained".
 
 ### 3. Reconcile
 

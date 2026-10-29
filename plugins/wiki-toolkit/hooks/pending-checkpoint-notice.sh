@@ -14,7 +14,7 @@ scope=$(scope_for "$cwd")
 stale=""
 [ -d "$BASE/pending/$scope" ] && stale=$(find "$BASE/pending/$scope" -name '*.jsonl' -mmin +60 2>/dev/null)
 if [ -n "$stale" ]; then
-  printf 'Unconsumed wiki-checkpoint snapshot(s) for this project:\n%s\nAn earlier session captured these but its wiki checkpoint never ran, so their durable findings were not ingested. Tell the user, and run the wiki-checkpoint skill scanning those snapshots at the first natural stopping point (immediately if no task is in flight), unless the user says not to. Apply the skill'\''s snapshot consumption rules per snapshot: scan only bytes after each session'\''s consumed watermark.\n' "$stale"
+  printf 'Unconsumed wiki-checkpoint snapshot(s) for this project:\n%s\nAn earlier session captured these but its wiki checkpoint never ran, so their durable findings were not ingested. This notice is not the user'\''s direction to sweep them: tell the user how many there are and ask one yes-or-no question, and run the wiki-checkpoint skill on them only after the user says yes in this conversation. Then apply the skill'\''s snapshot consumption rules per snapshot: scan only bytes after each session'\''s consumed watermark.\n' "$stale"
 fi
 
 blocked=$(find "$BASE/blocked/$scope" -name '*.jsonl' 2>/dev/null | wc -l | tr -d ' ')
