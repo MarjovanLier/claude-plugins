@@ -50,7 +50,7 @@
     {
       "name": "git-conventions",
       "description": "Git workflow skills: Conventional Commit messages and merge request contribution descriptions",
-      "version": "1.1.4",
+      "version": "1.1.5",
       "author": {
         "name": "Marjo van Lier",
         "email": "marjo.vanlier@gmail.com"

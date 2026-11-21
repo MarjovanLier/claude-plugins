@@ -2,7 +2,7 @@
 name: contribution-description
 description: Generate a merge request or pull request contribution description (title plus one-paragraph summary) from branch commits and the JIRA ticket. Use when the user asks to write or prepare an MR/PR description, raise a merge request, or describe a finished work branch. Not for git commit messages (use the conventional-commit skill for those). Pass base and feature branch as arguments when known.
 argument-hint: "[base-branch] [feature-branch]"
-version: 1.0.2
+version: 1.0.3
 ---
 
 Generate a code contribution description (title and summary paragraph) for: $ARGUMENTS
@@ -12,7 +12,7 @@ Generate a code contribution description (title and summary paragraph) for: $ARG
 Produce a Markdown document containing exactly two elements and nothing more:
 
 1. A title line in the format `<ticketId> (<type>) <description>`
-2. A `## Summary` section containing one prose paragraph of 3 to 5 sentences
+2. One prose paragraph of 3 to 5 sentences, with no heading above it (no `## Summary` or any other heading)
 
 The description must draw on Conventional Commit messages (defined in the `conventional-commit` skill), use Keep a Changelog change types, and use South African English spelling (organisation, behaviour, analyse).
 
@@ -184,12 +184,13 @@ Write ONE paragraph of 3 to 5 sentences, as prose. Rules:
 
 ### Step 10: Output the description
 
-Output exactly this document and nothing else inside it (no extra sections, no statistics, no commentary):
+Output exactly this document and nothing else inside it (no headings other than the title, no extra sections, no statistics, no commentary):
 
 ```markdown
 # <ticketId> (<type>) <description>
 
-## Summary
 <the paragraph from Step 9>
 ```
+
+When the description goes into a merge request or pull request, the title line (without the `#`) is the MR or PR title, and the description field holds the paragraph alone, with no heading.
 
